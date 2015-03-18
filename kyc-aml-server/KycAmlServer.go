@@ -48,6 +48,8 @@ func NewKycAmlServer(conf_filename string) (new_kycamlserver *kycAmlServerS, err
     // This expands the distance searched, but costs more resources (memory and time). 
     // For spell checking, "2" is typically enough, for query suggestions this can be higher
     new_kycamlserver.FuzzyModel.SetDepth(5)
+    
+    new_kycamlserver.FuzzyTrain()
 	
 	return
 }
@@ -94,9 +96,27 @@ func (this *kycAmlServerS) LoadData(url string) (err error) {
 	}
 	
 	this.DataLocked = false
-	log.Printf("Dataset loaded. You can perform queries now.")
+	log.Printf("Dataset loaded.")
 
 	return
+}
+
+func (this *kycAmlServerS) FuzzyTrain() {
+	
+	log.Printf("Training fuzzy search.")
+	
+	training_set := []string{}
+	
+	for _, sdn_entry := range this.Data.SdnEntries {
+		
+		training_set = append(training_set, sdn_entry.FirstName, sdn_entry.LastName)
+		
+		// TODO: train akas and addresses
+	}
+	
+	this.FuzzyModel.Train(training_set)
+	
+	log.Printf("Fuzzy search training complete.")
 }
 
 func (this *kycAmlServerS) Listen() (err error) {
@@ -107,6 +127,8 @@ func (this *kycAmlServerS) Listen() (err error) {
 		return
 	}
 	defer l.Close()
+	
+	log.Printf("Server listening. You can perform queries now.")
 	
 	for {
 		con, err := l.Accept()
@@ -157,20 +179,4 @@ func (this *kycAmlServerS) handleRequest(con net.Conn) {
 	}
 	
 	con.Close()
-}
-
-func (this *kycAmlServerS) FuzzyTrain() {
-	
-	log.Printf("Training fuzzy search")
-	
-	training_set := []string{}
-	
-	for _, sdn_entry := range this.Data.SdnEntries {
-		
-		training_set = append(training_set, sdn_entry.FirstName, sdn_entry.LastName)
-		
-		// TODO: train akas and addresses
-	}
-	
-	this.FuzzyModel.Train(training_set)
 }

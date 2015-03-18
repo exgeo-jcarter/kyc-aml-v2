@@ -11,8 +11,6 @@ func main() {
 		return
 	}
 	
-	server.FuzzyTrain()
-	
 	err = server.Listen()
 	if err != nil {
 		return
