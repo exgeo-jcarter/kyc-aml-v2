@@ -88,7 +88,7 @@ func (this *kycAmlServerS) LoadData(url string) (err error) {
 		return
 	}
 	
-	log.Printf("Parsing dataset")
+	log.Printf("Parsing dataset.")
 	
 	d := xml.NewDecoder(sdn_res.Body)
 	err = d.Decode(&this.Data)

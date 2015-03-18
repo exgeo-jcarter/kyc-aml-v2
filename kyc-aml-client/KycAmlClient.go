@@ -46,7 +46,6 @@ func (this *kycAmlClientS) LoadConf(filename string) (err error) {
 		return
 	}
 	
-	log.Printf("Config file loaded.")
 	return
 }
 
