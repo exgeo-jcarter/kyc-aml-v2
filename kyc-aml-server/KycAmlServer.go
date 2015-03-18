@@ -43,11 +43,11 @@ func NewKycAmlServer(conf_filename string) (new_kycamlserver *kycAmlServerS, err
 	new_kycamlserver.FuzzyModel = fuzzy.NewModel()
 	
 	// For testing only, this is not advisable on production
-    new_kycamlserver.FuzzyModel.SetThreshold(1)
+    //new_kycamlserver.FuzzyModel.SetThreshold(1)
     
     // This expands the distance searched, but costs more resources (memory and time). 
     // For spell checking, "2" is typically enough, for query suggestions this can be higher
-    new_kycamlserver.FuzzyModel.SetDepth(5)
+    new_kycamlserver.FuzzyModel.SetDepth(4)
     
     new_kycamlserver.FuzzyTrain()
 	
@@ -103,16 +103,22 @@ func (this *kycAmlServerS) LoadData(url string) (err error) {
 
 func (this *kycAmlServerS) FuzzyTrain() {
 	
-	log.Printf("Training fuzzy search.")
-	
 	training_set := []string{}
 	
-	for _, sdn_entry := range this.Data.SdnEntries {
+	for idx, sdn_entry := range this.Data.SdnEntries {
+		_ = idx
+		/*
+		if idx > 10 {
+			break
+		}
+		*/
 		
 		training_set = append(training_set, sdn_entry.FirstName, sdn_entry.LastName)
 		
 		// TODO: train akas and addresses
 	}
+	
+	log.Printf("Training fuzzy search.")
 	
 	this.FuzzyModel.Train(training_set)
 	
@@ -172,7 +178,7 @@ func (this *kycAmlServerS) handleRequest(con net.Conn) {
 	case "query":
 		log.Printf("Running query")
 		
-		q_result := this.FuzzyModel.Suggestions(socketMsg.Value, false)
+		q_result := this.FuzzyModel.SpellCheck(socketMsg.Value)
 		
 		log.Printf("Query result: %v", q_result)
 		con.Write([]byte(fmt.Sprintf(`{"result": "%v"}`+"\n", q_result)))
