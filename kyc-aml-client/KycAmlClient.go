@@ -7,6 +7,7 @@ import (
 	"bufio"
 	"io/ioutil"
 	"fmt"
+	"strings"
 )
 
 type kycAmlClientS struct {
@@ -51,7 +52,7 @@ func (this *kycAmlClientS) LoadConf(filename string) (err error) {
 
 func (this *kycAmlClientS) Query(q string) (err error) {
 	
-	msg := []byte(`{"action": "query", "value": "`+q+`"}`+"\n")
+	msg := []byte(`{"action": "query", "value": "`+strings.ToLower(q)+`"}`+"\n")
 	
 	con, err := net.Dial(this.Conf.Protocol, this.Conf.Host+":"+this.Conf.Port)
 	if err != nil {

@@ -66,6 +66,11 @@ type SocketMsgS struct {
 	Value 	string	`json:"value,omitempty"`
 }
 
+type QueryResS struct {
+	
+	Result []string	`json:"result,omitempty"`
+}
+
 /*
 type QueryResS struct {
 	

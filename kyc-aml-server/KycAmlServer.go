@@ -9,7 +9,7 @@ import (
 	"net"
 	"bufio"
 	"github.com/sajari/fuzzy"
-	"fmt"
+	"strings"
 )
 
 type kycAmlServerS struct {
@@ -48,6 +48,8 @@ func NewKycAmlServer(conf_filename string) (new_kycamlserver *kycAmlServerS, err
     // This expands the distance searched, but costs more resources (memory and time). 
     // For spell checking, "2" is typically enough, for query suggestions this can be higher
     new_kycamlserver.FuzzyModel.SetDepth(2)
+    
+    new_kycamlserver.FuzzyModel.SetUseAutocomplete(false)
     
     new_kycamlserver.FuzzyTrain()
 	
@@ -107,16 +109,18 @@ func (this *kycAmlServerS) FuzzyTrain() {
 	
 	for _, sdn_entry := range this.Data.SdnEntries {
 		
-		training_set = append(training_set, sdn_entry.FirstName, sdn_entry.LastName)
+		training_set = append(training_set, strings.ToLower(sdn_entry.FirstName)+" "+strings.ToLower(sdn_entry.LastName))
+		training_set = append(training_set, strings.ToLower(sdn_entry.LastName)+" "+strings.ToLower(sdn_entry.FirstName))
 		
 		for _, aka_list := range sdn_entry.AkaList.Akas {
 			
-			training_set = append(training_set, aka_list.FirstName, aka_list.LastName)
+			training_set = append(training_set, strings.ToLower(aka_list.FirstName)+" "+strings.ToLower(aka_list.LastName))
+			training_set = append(training_set, strings.ToLower(aka_list.LastName)+" "+strings.ToLower(aka_list.FirstName))
 		}
 		
 		for _, address_list := range sdn_entry.AddressList.Addresses {
 			
-			training_set = append(training_set, address_list.Address1, address_list.PostalCode)
+			training_set = append(training_set, strings.ToLower(address_list.Address1), strings.ToLower(address_list.PostalCode))
 		}
 		
 	}
@@ -176,6 +180,8 @@ func (this *kycAmlServerS) handleRequest(con net.Conn) {
 		if err != nil {
 			return
 		}
+		this.FuzzyTrain()
+		
 		con.Write([]byte(`{"result": "Data reloaded"}`+"\n"))
 		
 	case "query":
@@ -183,8 +189,19 @@ func (this *kycAmlServerS) handleRequest(con net.Conn) {
 		
 		q_result := this.FuzzyModel.Suggestions(socketMsg.Value, false)
 		
-		log.Printf("Query result: %v", q_result)
-		con.Write([]byte(fmt.Sprintf(`{"result": "%+v"}`+"\n", q_result)))
+		q_result_struct := QueryResS{
+			Result: q_result,
+		}
+		
+		q_result_json, err := json.Marshal(q_result_struct)
+		if err != nil {
+			log.Printf("Error: %v", err)
+			con.Close()
+			return
+		}
+		
+		log.Printf("Query result: %s", q_result_json)
+		con.Write([]byte(string(q_result_json)+"\n"))
 	}
 	
 	con.Close()
