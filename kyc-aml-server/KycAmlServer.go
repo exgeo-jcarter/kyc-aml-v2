@@ -1,3 +1,7 @@
+/*
+	This is for checking names and addresses against a blacklist.
+*/
+
 package main
 
 import (
@@ -10,6 +14,7 @@ import (
 	"bufio"
 	"github.com/sajari/fuzzy"
 	"strings"
+	"github.com/dotcypress/phonetics"
 )
 
 type kycAmlServerS struct {
@@ -19,6 +24,7 @@ type kycAmlServerS struct {
 	FuzzyModel *fuzzy.Model 
 }
 
+// Server details, loaded from config.json
 type KycAmlServerConfS struct {
 	Host 		string	`json:"host,omitempty"`
 	Port 		string	`json:"port,omitempty"`
@@ -26,36 +32,36 @@ type KycAmlServerConfS struct {
 	DataUrl		string	`json:"data_url,omitempty"`
 }
 
+// Load the server.
 func NewKycAmlServer(conf_filename string) (new_kycamlserver *kycAmlServerS, err error) {
 	
 	new_kycamlserver = &kycAmlServerS{}
 	
+	// Load the server configuration.
 	err = new_kycamlserver.LoadConf(conf_filename)
 	if err != nil {
 		return
 	}
 	
+	// Load the blacklist data.
 	err = new_kycamlserver.LoadData(new_kycamlserver.Conf.DataUrl)
 	if err != nil {
 		return
 	}
 	
+	// Set up the fuzzy search model.
 	new_kycamlserver.FuzzyModel = fuzzy.NewModel()
-	
-	// For testing only, this is not advisable on production
     new_kycamlserver.FuzzyModel.SetThreshold(1)
-    
-    // This expands the distance searched, but costs more resources (memory and time). 
-    // For spell checking, "2" is typically enough, for query suggestions this can be higher
     new_kycamlserver.FuzzyModel.SetDepth(2)
-    
     new_kycamlserver.FuzzyModel.SetUseAutocomplete(false)
     
+    // Train fuzzy search on the blacklist data.
     new_kycamlserver.FuzzyTrain()
 	
 	return
 }
 
+// Load the server configuration.
 func (this *kycAmlServerS) LoadConf(filename string) (err error) {
 	
 	conf_bytes, err := ioutil.ReadFile(filename)
@@ -74,8 +80,10 @@ func (this *kycAmlServerS) LoadConf(filename string) (err error) {
 	return
 }
 
+// Load the blacklist data.
 func (this *kycAmlServerS) LoadData(url string) (err error) {
 	
+	// Lock the dataset.
 	this.DataLocked = true
 	
 	client := http.Client{}
@@ -97,43 +105,76 @@ func (this *kycAmlServerS) LoadData(url string) (err error) {
 		return
 	}
 	
+	// Unlock the dataset.
 	this.DataLocked = false
 	log.Printf("Dataset loaded.")
 
 	return
 }
 
+// Train the fuzzy search with the blacklist data.
 func (this *kycAmlServerS) FuzzyTrain() {
 	
 	training_set := []string{}
 	
+	// Loop over all the entries in the SDN blacklist.
 	for _, sdn_entry := range this.Data.SdnEntries {
 		
-		training_set = append(training_set, strings.ToLower(sdn_entry.FirstName)+" "+strings.ToLower(sdn_entry.LastName))
-		training_set = append(training_set, strings.ToLower(sdn_entry.LastName)+" "+strings.ToLower(sdn_entry.FirstName))
+		// Names to lowercase.
+		firstname_lower := strings.ToLower(sdn_entry.FirstName)
+		lastname_lower := strings.ToLower(sdn_entry.LastName)
 		
+		// Metaphone-encoded names.
+		name_metaphone := strings.ToLower(phonetics.EncodeMetaphone(firstname_lower+" "+lastname_lower))
+		revname_metaphone := strings.ToLower(phonetics.EncodeMetaphone(lastname_lower+" "+firstname_lower))
+		
+		// Add names to training set.
+		training_set = append(training_set, firstname_lower+" "+lastname_lower, lastname_lower+" "+firstname_lower, name_metaphone, revname_metaphone)
+		
+		// Loop over all AKAs.
 		for _, aka_list := range sdn_entry.AkaList.Akas {
 			
-			training_set = append(training_set, strings.ToLower(aka_list.FirstName)+" "+strings.ToLower(aka_list.LastName))
-			training_set = append(training_set, strings.ToLower(aka_list.LastName)+" "+strings.ToLower(aka_list.FirstName))
+			// AKA names to lowercase.
+			aka_firstname_lower := strings.ToLower(aka_list.FirstName)
+			aka_lastname_lower := strings.ToLower(aka_list.LastName)
+			
+			// Metaphone-encoded AKA names.
+			aka_name_metaphone := strings.ToLower(phonetics.EncodeMetaphone(aka_firstname_lower+" "+aka_lastname_lower))
+			aka_revname_metaphone := strings.ToLower(phonetics.EncodeMetaphone(aka_lastname_lower+" "+aka_firstname_lower))
+			
+			// Add AKA names to training set.
+			training_set = append(training_set, aka_firstname_lower+" "+aka_lastname_lower, aka_lastname_lower+" "+aka_firstname_lower, aka_name_metaphone, aka_revname_metaphone)
 		}
 		
+		// Loop over all addresses.
 		for _, address_list := range sdn_entry.AddressList.Addresses {
 			
-			training_set = append(training_set, strings.ToLower(address_list.Address1), strings.ToLower(address_list.PostalCode))
+			// Addresses to lowercase.
+			address1_lower := strings.ToLower(address_list.Address1)
+			postalcode_lower := strings.ToLower(address_list.PostalCode)
+			
+			// Metaphone-encoded addresses.
+			address1_metaphone := strings.ToLower(phonetics.EncodeMetaphone(address1_lower))
+			postalcode_metaphone := strings.ToLower(phonetics.EncodeMetaphone(postalcode_lower))
+			
+			// Add addresses to training set.
+			training_set = append(training_set, address1_lower, address1_metaphone, postalcode_lower, postalcode_metaphone)
 		}
 		
 	}
 	
 	log.Printf("Training fuzzy search.")
 	
+	// Train fuzzy search using the training set.
 	this.FuzzyModel.Train(training_set)
 	
 	log.Printf("Fuzzy search training complete.")
 }
 
+// Listen for new connections.
 func (this *kycAmlServerS) Listen() (err error) {
 	
+	// Listen.
 	l, err := net.Listen(this.Conf.Protocol, this.Conf.Host+":"+this.Conf.Port)
 	if err != nil {
 		log.Printf("Error: %v", err)
@@ -144,20 +185,24 @@ func (this *kycAmlServerS) Listen() (err error) {
 	log.Printf("Server listening. You can perform queries now.")
 	
 	for {
+		// Accept new connection.
 		con, err := l.Accept()
 		if err != nil {
 			log.Printf("Error: %v", err)
 			continue
 		}
 		
+		// Do something with the new connection.
 		go this.handleRequest(con)
 	}
 }
 
+// Handle network requests.
 func (this *kycAmlServerS) handleRequest(con net.Conn) {
-		
+	
 	conbuf := bufio.NewReader(con)
 	
+	// Read buffer until newline.
 	res, err := conbuf.ReadBytes('\n')
 	if err != nil {
 		log.Printf("Error: %v", err)
@@ -165,6 +210,7 @@ func (this *kycAmlServerS) handleRequest(con net.Conn) {
 		return
 	}
 	
+	// Parse request into a struct.
 	var socketMsg SocketMsgS
 	err = json.Unmarshal(res[:len(res)-1], &socketMsg)
 	if err != nil {
@@ -173,26 +219,97 @@ func (this *kycAmlServerS) handleRequest(con net.Conn) {
 		return
 	}
 	
+	// Check which action was requested.
 	switch socketMsg.Action {
 		
+	// If data reload was requested.
 	case "load_data":
+		
+		// Reload blacklist.
 		err = this.LoadData(this.Conf.DataUrl)
 		if err != nil {
 			return
 		}
+		
+		// Train fuzzy search with blacklist data.
 		this.FuzzyTrain()
 		
+		// Respond to client.
 		con.Write([]byte(`{"result": "Data reloaded"}`+"\n"))
 		
+	// If a query was requested.
 	case "query":
-		log.Printf("Running query: %v", socketMsg.Value)
+	
+		// Metaphone-encoded query to lowercase.
+		metaphone_query := strings.ToLower(phonetics.EncodeMetaphone(socketMsg.Value))
 		
+		// Search for fuzzy matches.
 		q_result := this.FuzzyModel.Suggestions(socketMsg.Value, false)
 		
-		q_result_struct := QueryResS{
-			Result: q_result,
+		// Search for metaphone matches.
+		q_m_result := this.FuzzyModel.Suggestions(metaphone_query, false)
+		
+		// If no fuzzy matches, remove empty strings from result set.
+		empty := true
+		for _, val := range q_result {
+			if val != "" {
+				empty = false
+				break
+			}
+		}
+		if empty {
+			q_result = []string{}
 		}
 		
+		// If there are fuzzy matches, remove empty strings from result set.
+		for idx, val := range q_result {
+			if val == "" {
+				if idx < (len(q_result)-1) {
+					q_result = append(q_result[:idx], q_result[idx+1:]...)
+				}
+			}
+		}
+		
+		// If no metaphone matches, remove empty strings from result set.
+		empty = true
+		for _, val := range q_m_result {
+			if val != "" {
+				empty = false
+				break
+			}
+		}
+		if empty {
+			q_m_result = []string{}
+		}
+		
+		// If there are metaphone matches, remove empty strings from result set.
+		metaphone_exact_match := false
+		for idx, val := range q_m_result {
+			
+			// Metaphone match must be exact (fuzzy metaphone match not acceptable).
+			if val == metaphone_query {
+				metaphone_exact_match = true
+			}
+			
+			if val == "" {
+				if idx < (len(q_m_result)-1) {
+					q_m_result = append(q_m_result[:idx], q_m_result[idx+1:]...)
+				}
+			}
+		}
+		if !metaphone_exact_match {
+			q_m_result = []string{}
+		}
+		
+		// Create response struct.
+		q_result_struct := QueryResS{
+			Query: socketMsg.Value,
+			MetaphoneQuery: metaphone_query,
+			Result: q_result,
+			MetaphoneResult: q_m_result,
+		}
+		
+		// Marshal response.
 		q_result_json, err := json.Marshal(q_result_struct)
 		if err != nil {
 			log.Printf("Error: %v", err)
@@ -200,9 +317,11 @@ func (this *kycAmlServerS) handleRequest(con net.Conn) {
 			return
 		}
 		
+		// Send results to client.
 		log.Printf("Query result: %s", q_result_json)
 		con.Write([]byte(string(q_result_json)+"\n"))
 	}
 	
+	// Close the client's connection.
 	con.Close()
 }

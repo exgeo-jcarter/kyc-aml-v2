@@ -60,42 +60,18 @@ type AddressS struct {
 }
 // -----End XML structs -----
 
+// Server Request
 type SocketMsgS struct {
 	
 	Action 	string	`json:"action,omitempty"`
 	Value 	string	`json:"value,omitempty"`
 }
 
+// Query response
 type QueryResS struct {
 	
-	Result []string	`json:"result,omitempty"`
+	Query			string		`json:"query,omitempty"`
+	MetaphoneQuery	string		`json:"metaphone_query"`
+	Result 			[]string	`json:"result,omitempty"`
+	MetaphoneResult	[]string	`json:"metaphone_result,omitempty"`
 }
-
-/*
-type QueryResS struct {
-	
-	Num_matches 							int64	`json:"num_matches,omitempty"`
-	
-	// Name matches
-	Num_lastname_matches 					int64	`json:"num_lastname_matches,omitempty"`
-	Num_firstname_matches 					int64	`json:"num_firstname_matches,omitempty"`
-	Num_fullname_matches 					int64	`json:"num_fullname_matches,omitempty"`
-	Num_reversefullname_matches 			int64	`json:"num_reversefullname_matches,omitempty"`
-	Num_aka_strong_lastname_matches 		int64	`json:"num_aka_strong_lastname_matches,omitempty"`
-	Num_aka_weak_lastname_matches 			int64	`json:"num_aka_weak_lastname_matches,omitempty"`
-	Num_aka_strong_firstname_matches 		int64	`json:"num_aka_strong_firstname_matches,omitempty"`
-	Num_aka_weak_firstname_matches 			int64	`json:"num_aka_weak_firstname_matches,omitempty"`
-	Num_aka_strong_fullname_matches 		int64	`json:"num_aka_strong_fullname_matches,omitempty"`
-	Num_aka_weak_fullname_matches 			int64	`json:"num_aka_weak_fullname_matches,omitempty"`
-	Num_aka_strong_reversefullname_matches 	int64	`json:"num_aka_strong_reversefullname_matches,omitempty"`
-	Num_aka_weak_reversefullname_matches 	int64	`json:"num_aka_weak_reversefullname_matches,omitempty"`
-	
-	// Address matches
-	Num_address1_matches 					int64	`json:"num_address1_matches,omitempty"`
-	Num_postalcode_matches 					int64	`json:"num_postalcode_matches,omitempty"`
-	
-	Risk_score								float64	`json:"risk_score,omitempty"`
-	
-	Error 									string	`json:"error,omitempty"`
-}
-*/
