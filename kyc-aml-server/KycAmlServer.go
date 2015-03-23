@@ -240,88 +240,129 @@ func (this *kycAmlServerS) handleRequest(con net.Conn) {
 	// If a query was requested.
 	case "query":
 	
-		// Metaphone-encoded query to lowercase.
-		metaphone_query := strings.ToLower(phonetics.EncodeMetaphone(socketMsg.Value))
-		
-		// Search for fuzzy matches.
-		q_result := this.FuzzyModel.Suggestions(socketMsg.Value, false)
-		
-		// Search for metaphone matches.
-		q_m_result := this.FuzzyModel.Suggestions(metaphone_query, false)
-		
-		// If no fuzzy matches, remove empty strings from result set.
-		empty := true
-		for _, val := range q_result {
-			if val != "" {
-				empty = false
-				break
-			}
-		}
-		if empty {
-			q_result = []string{}
-		}
-		
-		// If there are fuzzy matches, remove empty strings from result set.
-		for idx, val := range q_result {
-			if val == "" {
-				if idx < (len(q_result)-1) {
-					q_result = append(q_result[:idx], q_result[idx+1:]...)
-				}
-			}
-		}
-		
-		// If no metaphone matches, remove empty strings from result set.
-		empty = true
-		for _, val := range q_m_result {
-			if val != "" {
-				empty = false
-				break
-			}
-		}
-		if empty {
-			q_m_result = []string{}
-		}
-		
-		// If there are metaphone matches, remove empty strings from result set.
-		metaphone_exact_match := false
-		for idx, val := range q_m_result {
-			
-			// Metaphone match must be exact (fuzzy metaphone match not acceptable).
-			if val == metaphone_query {
-				metaphone_exact_match = true
-			}
-			
-			if val == "" {
-				if idx < (len(q_m_result)-1) {
-					q_m_result = append(q_m_result[:idx], q_m_result[idx+1:]...)
-				}
-			}
-		}
-		if !metaphone_exact_match {
-			q_m_result = []string{}
-		}
-		
-		// Create response struct.
-		q_result_struct := QueryResS{
-			Query: socketMsg.Value,
-			MetaphoneQuery: metaphone_query,
-			Result: q_result,
-			MetaphoneResult: q_m_result,
-		}
-		
-		// Marshal response.
-		q_result_json, err := json.Marshal(q_result_struct)
-		if err != nil {
-			log.Printf("Error: %v", err)
-			con.Close()
-			return
-		}
-		
-		// Send results to client.
-		log.Printf("Query result: %s", q_result_json)
-		con.Write([]byte(string(q_result_json)+"\n"))
+		this.Query(con, &socketMsg)
 	}
 	
 	// Close the client's connection.
 	con.Close()
+}
+
+func (this *kycAmlServerS) Query(con net.Conn, socketMsg *SocketMsgS) {
+	
+	// Fuzzy query to lowercase.
+	fuzzy_query := strings.ToLower(socketMsg.Value)
+
+	// Metaphone-encoded query to lowercase.
+	metaphone_query := strings.ToLower(phonetics.EncodeMetaphone(strings.ToLower(socketMsg.Value)))
+	
+	// Search for fuzzy matches.
+	q_result := this.FuzzyModel.Suggestions(strings.ToLower(socketMsg.Value), false)
+	
+	// Search for metaphone matches.
+	q_m_result := this.FuzzyModel.Suggestions(metaphone_query, false)
+	
+	// If no fuzzy matches, remove empty strings from result set.
+	empty := true
+	for _, val := range q_result {
+		if val != "" {
+			empty = false
+			break
+		}
+	}
+	if empty {
+		q_result = []string{}
+	}
+	
+	// If we get a match, remove first 10 elements of array because they are always empty for some reason.
+	if len(q_result) > 0 {
+		q_result = q_result[10:]
+	}
+	
+	// If no metaphone matches, remove empty strings from result set.
+	empty = true
+	for _, val := range q_m_result {
+		if val != "" {
+			empty = false
+			break
+		}
+	}
+	if empty {
+		q_m_result = []string{}
+	}
+	
+	// If we get a match, remove first 10 elements of array because they are always empty for some reason.
+	if len(q_m_result) > 0 {
+		q_m_result = q_m_result[10:]
+	}
+	
+	// Create response struct.
+	q_result_struct := QueryResS{
+		Query: socketMsg.Value,
+		MetaphoneQuery: metaphone_query,
+		Result: q_result,
+		MetaphoneResult: q_m_result,
+		RiskScore: this.CalculateRiskScore(fuzzy_query, metaphone_query, q_result, q_m_result),
+	}
+	
+	// Marshal response.
+	q_result_json, err := json.Marshal(q_result_struct)
+	if err != nil {
+		log.Printf("Error: %v", err)
+		con.Close()
+		return
+	}
+	
+	// Send results to client.
+	log.Printf("Query result: %s", q_result_json)
+	con.Write([]byte(string(q_result_json)+"\n"))
+}
+
+// Calculates amount of risk, based on how close q is to res, and how close mq is to mres.
+func (this *kycAmlServerS) CalculateRiskScore(q, mq string, res, mres []string) (score float64) {
+	
+	var q_score float64
+	var mq_score float64
+	
+	// Calculate fuzzy risk.
+	for _, val := range res {
+	
+		var q_score2 float64
+	
+		if (len(val) > 0) && (len(q) >= len(val)) {
+		
+			for idx2, _ := range val {
+				
+				if q[idx2] == val[idx2] {
+					q_score2++
+				}
+			}
+			
+			q_score2 += (float64(len(q)) - float64(len(val)))
+			q_score2 /= (float64(len(q))) / 100
+		
+		} else if (len(val) > 0) && (len(q) < len(val)){
+			
+			for idx2, _ := range q {
+				
+				if q[idx2] == val[idx2] {
+					q_score2++
+				}
+			}
+			
+			q_score2 += (float64(len(val)) - float64(len(q)))
+			q_score2 /= (float64(len(val))) / 100
+		}
+		
+		if q_score2 > q_score {
+			q_score = q_score2
+		}
+	}
+	
+	if len(mres) > 0 {
+		mq_score = 100
+	}
+	
+	score = (q_score + mq_score) / 2
+	
+	return
 }

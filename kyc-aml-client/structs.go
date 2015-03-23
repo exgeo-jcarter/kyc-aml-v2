@@ -12,4 +12,5 @@ type QueryResS struct {
 	MetaphoneQuery	string		`json:"metaphone_query"`
 	Result 			[]string	`json:"result,omitempty"`
 	MetaphoneResult	[]string	`json:"metaphone_result,omitempty"`
+	RiskScore		float64		`json:"risk_score"`
 } 

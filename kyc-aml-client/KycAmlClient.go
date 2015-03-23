@@ -104,49 +104,8 @@ func (this *kycAmlClientS) Query(q string) (err error) {
 			// If we gone a non-empty response.
 			if len(res) > 0 {
 				
-				// Parse the server's response into a struct.
-				var query_res QueryResS
-				err = json.Unmarshal(res[:len(res)-1], &query_res)
-				if err != nil {
-					log.Printf("Error: %v", err)
-					resCh <- 0
-					return
-				}
-				
-				// Remove empty strings from the result section of server's response.
-				for idx, val := range query_res.Result {
-					if (val == "") {
-						if idx < (len(query_res.Result)-1) {
-							query_res.Result = append(query_res.Result[:idx], query_res.Result[idx+1:]...)
-						}
-					}
-				}
-				if len(query_res.Result) > 2 {
-					query_res.Result = query_res.Result[2:]
-				}
-				
-				// Remove empty strings from the metaphone_result section of server's response.
-				for idx, val := range query_res.MetaphoneResult {
-					if (val == "") {
-						if idx < (len(query_res.MetaphoneResult)-1) {
-							query_res.MetaphoneResult = append(query_res.MetaphoneResult[:idx], query_res.MetaphoneResult[idx+1:]...)
-						}
-					}
-				}
-				if len(query_res.MetaphoneResult) > 2 {
-					query_res.MetaphoneResult = query_res.MetaphoneResult[2:]
-				}
-				
-				// Marshal the query response.
-				query_res_bytes, err := json.Marshal(query_res)
-				if err != nil {
-					log.Printf("Error: %v", err)
-					resCh <- 0
-					return
-				}
-				
 				// Output the query response.
-				fmt.Printf("%s\n", query_res_bytes)
+				fmt.Printf("%s\n", res[:len(res)-1])
 				
 				// Send an int to the channel, meaning we can exit the program now.
 				resCh <- 1
