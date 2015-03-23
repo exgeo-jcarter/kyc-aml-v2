@@ -317,7 +317,7 @@ func (this *kycAmlServerS) Query(con net.Conn, socketMsg *SocketMsgS) {
 	con.Write([]byte(string(q_result_json)+"\n"))
 }
 
-// Calculates amount of risk, based on how close q is to res, and how close mq is to mres.
+// Calculates amount of risk, based on how close our match was to the original query.
 func (this *kycAmlServerS) CalculateRiskScore(q, mq string, res, mres []string) (score float64) {
 	
 	var q_score float64
