@@ -15,3 +15,4 @@ $ cd ../kyc-aml-client
 $ go build  
 $ ./kyc-aml-client "ali akbar mohummad"  
 
+Note: The server currently requires about 2.3 GB of RAM to run.
