@@ -295,6 +295,17 @@ func (this *kycAmlServerS) Query(con net.Conn, socketMsg *SocketMsgS) {
 		q_m_result = q_m_result[10:]
 	}
 	
+	// Remove non-exact metaphone matches
+	metaphone_exact_match := false
+	for _, val := range q_m_result {
+		if val == metaphone_query {
+			metaphone_exact_match = true
+		}
+	}
+	if !metaphone_exact_match {
+		q_m_result = []string{}
+	}
+	
 	// Create response struct.
 	q_result_struct := QueryResS{
 		Query: socketMsg.Value,
