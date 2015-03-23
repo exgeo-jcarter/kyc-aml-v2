@@ -348,7 +348,7 @@ func (this *kycAmlServerS) CalculateRiskScore(q, mq string, res, mres []string) 
 				}
 			}
 			
-			q_score2 += (float64(len(q)) - float64(len(val)))
+			q_score2 -= (float64(len(q)) - float64(len(val)))
 			q_score2 /= (float64(len(q))) / 100
 		
 		} else if (len(val) > 0) && (len(q) < len(val)){
@@ -360,7 +360,7 @@ func (this *kycAmlServerS) CalculateRiskScore(q, mq string, res, mres []string) 
 				}
 			}
 			
-			q_score2 += (float64(len(val)) - float64(len(q)))
+			q_score2 -= (float64(len(val)) - float64(len(q)))
 			q_score2 /= (float64(len(val))) / 100
 		}
 		
