@@ -1,4 +1,4 @@
-package main
+package KycAmlClient
 
 type QueryReqS struct {
 	

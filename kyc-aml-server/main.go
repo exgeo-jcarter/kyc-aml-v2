@@ -4,10 +4,14 @@
 
 package main
 
+import (
+	kyc_aml_server "./KycAmlServer"
+)
+
 func main() {
 	
 	// Start a new server.
-	server, err := NewKycAmlServer("config.json")
+	server, err := kyc_aml_server.NewKycAmlServer("KycAmlServer/config.json")
 	if err != nil {
 		return
 	}

@@ -1,6 +1,7 @@
 package main
 
 import (
+	kyc_aml_client "./KycAmlClient"
 	"os"
 	"fmt"
 )
@@ -12,13 +13,14 @@ func main() {
 		return
 	}
 	
-	client, err := NewKycAmlClient("config.json")
+	client, err := kyc_aml_client.NewKycAmlClient("KycAmlClient/config.json")
 	if err != nil {
 		return
 	}
 	
-	err = client.Query(os.Args[1])
+	query_res, err := client.Query(os.Args[1])
 	if err != nil {
 		return
 	}
+	fmt.Printf("%s\n", query_res)
 }

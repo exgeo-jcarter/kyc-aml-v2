@@ -2,7 +2,7 @@
 	This is for checking names and addresses against a blacklist.
 */
 
-package main
+package KycAmlServer
 
 import (
 	"io/ioutil"
@@ -324,7 +324,7 @@ func (this *kycAmlServerS) Query(con net.Conn, socketMsg *SocketMsgS) {
 	}
 	
 	// Send results to client.
-	log.Printf("Query result: %s", q_result_json)
+	//log.Printf("Query result: %s", q_result_json)
 	con.Write([]byte(string(q_result_json)+"\n"))
 }
 

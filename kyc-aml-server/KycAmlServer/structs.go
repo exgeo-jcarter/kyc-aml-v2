@@ -1,4 +1,4 @@
-package main
+package KycAmlServer
 
 // ----- XML structs -----
 type SdnListS struct {

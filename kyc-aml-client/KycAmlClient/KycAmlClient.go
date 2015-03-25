@@ -2,7 +2,7 @@
 	This is for checking names and addresses against a blacklist.
 */
 
-package main
+package KycAmlClient
 
 import (
 	"net"
@@ -10,7 +10,6 @@ import (
 	"log"
 	"bufio"
 	"io/ioutil"
-	"fmt"
 	"strings"
 )
 
@@ -57,7 +56,7 @@ func (this *kycAmlClientS) LoadConf(filename string) (err error) {
 }
 
 // Query the server to check for string matches against the blacklist.
-func (this *kycAmlClientS) Query(q string) (err error) {
+func (this *kycAmlClientS) Query(q string) (res []byte, err error) {
 	
 	// Make the query struct.
 	msg_struct := QueryReqS{
@@ -89,8 +88,6 @@ func (this *kycAmlClientS) Query(q string) (err error) {
 	// Start listening for a response from server.
 	go (func(resCh chan int, conbuf *bufio.Reader) {
 		
-		res := []byte{}
-		
 		for {
 			
 			// Read server's response until newline.
@@ -104,8 +101,10 @@ func (this *kycAmlClientS) Query(q string) (err error) {
 			// If we gone a non-empty response.
 			if len(res) > 0 {
 				
+				res = res[:len(res)-1]
+				
 				// Output the query response.
-				fmt.Printf("%s\n", res[:len(res)-1])
+				//fmt.Printf("%s\n", res[:len(res)-1])
 				
 				// Send an int to the channel, meaning we can exit the program now.
 				resCh <- 1
