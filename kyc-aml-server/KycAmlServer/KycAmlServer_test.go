@@ -33,6 +33,7 @@ func TestMain(m *testing.M) {
 	os.Exit(result)
 }
 
+/*
 func TestQueryRemoveFirstChar(t *testing.T) {
 	
 	t.Logf("Building test set: All entries in SDN list with their first character removed.")
@@ -588,6 +589,7 @@ func TestQueryChangeTwoRandomChars(t *testing.T) {
 	
 	t.Logf("Test passed because misses were below threshold of %v%%", threshold)
 }
+*/
 
 // Change three random characters. Runs n times.
 func TestQueryChangeThreeRandomChars(t *testing.T) {

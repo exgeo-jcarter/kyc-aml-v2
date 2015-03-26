@@ -52,7 +52,7 @@ func NewKycAmlServer(conf_filename string) (new_kycamlserver *kycAmlServerS, err
 	// Set up the fuzzy search model.
 	new_kycamlserver.FuzzyModel = fuzzy.NewModel()
     new_kycamlserver.FuzzyModel.SetThreshold(1)
-    new_kycamlserver.FuzzyModel.SetDepth(2)
+    new_kycamlserver.FuzzyModel.SetDepth(3)
     new_kycamlserver.FuzzyModel.SetUseAutocomplete(false)
     
     // Train fuzzy search on the blacklist data.
