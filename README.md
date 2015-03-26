@@ -20,4 +20,5 @@ Note: The server currently requires about 3.2 GB of RAM to run.
 To run the test suite:  
 
 $ cd kyc-aml-v2/kyc-aml-server/KycAmlServer  
-$ go test -v
+$ go test -v  
+
