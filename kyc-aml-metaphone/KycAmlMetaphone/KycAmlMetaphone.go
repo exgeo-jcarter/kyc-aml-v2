@@ -302,6 +302,10 @@ func (this *KycAmlMetaphoneS) Query(con net.Conn, socketMsg *SocketMsgS) {
 		})()
 	}
 	
+	for i := 0; i < num_queries; i++ {
+		<- wait_for_query_results_ch
+	}
+	
 	res_struct := &QueryResS{
 		Query: metaphone_query,
 		EncodedQuery: metaphone_encoded_query,
