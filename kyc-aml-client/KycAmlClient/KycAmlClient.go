@@ -13,20 +13,26 @@ import (
 	"strings"
 )
 
-type kycAmlClientS struct {
-	Conf *KycAmlClientConfS
+type KycAmlClientS struct {
+	Conf 	*KycAmlClientConfS
 }
 
 type KycAmlClientConfS struct {
-	Host 		string	`json:"host,omitempty"`
-	Port 		string	`json:"port,omitempty"`
-	Protocol 	string	`json:"protocol,omitempty"`
+	DataHost 			string	`json:"data_host,omitempty"`
+	DataPort 			string	`json:"data_port,omitempty"`
+	DataProtocol		string	`json:"data_protocol,omitempty"`
+	FuzzyHost 			string	`json:"fuzzy_host,omitempty"`
+	FuzzyPort 			string	`json:"fuzzy_port,omitempty"`
+	FuzzyProtocol		string	`json:"fuzzy_protocol,omitempty"`
+	MetaphoneHost 		string	`json:"metaphone_host,omitempty"`
+	MetaphonePort 		string	`json:"metaphone_port,omitempty"`
+	MetaphoneProtocol	string	`json:"metaphone_protocol,omitempty"`
 }
 
 // Initialize the client.
-func NewKycAmlClient(conf_filename string) (new_kycamlclient *kycAmlClientS, err error) {
+func NewKycAmlClient(conf_filename string) (new_kycamlclient *KycAmlClientS, err error) {
 	
-	new_kycamlclient = &kycAmlClientS{}
+	new_kycamlclient = &KycAmlClientS{}
 	
 	// Load server settings.
 	err = new_kycamlclient.LoadConf(conf_filename)
@@ -38,7 +44,7 @@ func NewKycAmlClient(conf_filename string) (new_kycamlclient *kycAmlClientS, err
 }
 
 // Load server settings.
-func (this *kycAmlClientS) LoadConf(filename string) (err error) {
+func (this *KycAmlClientS) LoadConf(filename string) (err error) {
 	
 	conf_bytes, err := ioutil.ReadFile(filename)
 	if err != nil {
@@ -52,16 +58,18 @@ func (this *kycAmlClientS) LoadConf(filename string) (err error) {
 		return
 	}
 	
+	//log.Printf("Client config file loaded.")
+	
 	return
 }
 
-// Query the server to check for string matches against the blacklist.
-func (this *kycAmlClientS) Query(q string) (res []byte, err error) {
+// Query the fuzzy server to check for string matches against the blacklist.
+func (this *KycAmlClientS) QueryServer(protocol, host, port, action, value string) (res string, err error) {
 	
 	// Make the query struct.
 	msg_struct := QueryReqS{
-		Action: "query",
-		Value: strings.ToLower(q),
+		Action: action,
+		Value: strings.ToLower(value),
 	}
 	
 	// Marshal the query struct.
@@ -72,10 +80,10 @@ func (this *kycAmlClientS) Query(q string) (res []byte, err error) {
 	}
 	
 	// Add newline to the end of the query bytes, so server knows where to stop reading.
-	msg = []byte(string(msg)+"\n")
+	msg = append(msg, []byte("\n")...)
 	
 	// Connect to the server.
-	con, err := net.Dial(this.Conf.Protocol, this.Conf.Host+":"+this.Conf.Port)
+	con, err := net.Dial(protocol, host+":"+port)
 	if err != nil {
 		log.Printf("Error: %v", err)
 		return
@@ -91,12 +99,14 @@ func (this *kycAmlClientS) Query(q string) (res []byte, err error) {
 		for {
 			
 			// Read server's response until newline.
-			res, err = conbuf.ReadBytes('\n')
+			res_bytes, err := conbuf.ReadBytes('\n')
 			if err != nil {
 				log.Printf("Error: %v", err)
 		    	resCh <- 0
 		    	break
 			}
+			
+			res = string(res_bytes)
 			
 			// If we gone a non-empty response.
 			if len(res) > 0 {
@@ -129,3 +139,73 @@ func (this *kycAmlClientS) Query(q string) (res []byte, err error) {
 	
 	return
 }
+
+func (this *KycAmlClientS) QueryDataServer(action, value string) (res string, err error) {
+	
+	res, err = this.QueryServer(this.Conf.DataProtocol, this.Conf.DataHost, this.Conf.DataPort, action, value)
+	return
+}
+
+func (this *KycAmlClientS) QueryFuzzyServer(action, value string) (res string, err error) {
+	
+	res, err = this.QueryServer(this.Conf.FuzzyProtocol, this.Conf.FuzzyHost, this.Conf.FuzzyPort, action, value)
+	return
+}
+
+func (this *KycAmlClientS) QueryMetaphoneServer(action, value string) (res string, err error) {
+	
+	res, err = this.QueryServer(this.Conf.MetaphoneProtocol, this.Conf.MetaphoneHost, this.Conf.MetaphonePort, action, value)
+	return
+}
+
+/*
+// Calculates amount of risk, based on how close our match was to the original query.
+func (this *kycAmlFuzzyS) CalculateRiskScore(q, mq string, res, mres []string) (score float64) {
+	
+	var q_score float64
+	var mq_score float64
+	
+	// Calculate fuzzy risk.
+	for _, val := range res {
+	
+		var q_score2 float64
+	
+		if (len(val) > 0) && (len(q) >= len(val)) {
+		
+			for idx2, _ := range val {
+				
+				if q[idx2] == val[idx2] {
+					q_score2++
+				}
+			}
+			
+			q_score2 -= (float64(len(q)) - float64(len(val)))
+			q_score2 /= (float64(len(q))) / 100
+		
+		} else if (len(val) > 0) && (len(q) < len(val)){
+			
+			for idx2, _ := range q {
+				
+				if q[idx2] == val[idx2] {
+					q_score2++
+				}
+			}
+			
+			q_score2 -= (float64(len(val)) - float64(len(q)))
+			q_score2 /= (float64(len(val))) / 100
+		}
+		
+		if q_score2 > q_score {
+			q_score = q_score2
+		}
+	}
+	
+	if len(mres) > 0 {
+		mq_score = 100
+	}
+	
+	score = (q_score + mq_score) / 2
+	
+	return
+}
+*/

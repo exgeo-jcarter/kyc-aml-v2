@@ -1,5 +1,13 @@
 {
-	"host": "localhost",
-	"port": "3333",
-	"protocol": "tcp"
+	"data_host": "localhost",
+	"data_port": "3332",
+	"data_protocol": "tcp",
+	
+	"fuzzy_host": "localhost",
+	"fuzzy_port": "3333",
+	"fuzzy_protocol": "tcp",
+	
+	"metaphone_host": "localhost",
+	"metaphone_port": "3334",
+	"metaphone_protocol": "tcp"
 }

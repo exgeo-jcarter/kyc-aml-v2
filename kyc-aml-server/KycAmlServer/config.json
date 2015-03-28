@@ -1,6 +1,0 @@
-{
-	"host": "localhost",
-	"port": "3333",
-	"protocol": "tcp",
-	"data_url": "http://www.treasury.gov/ofac/downloads/sdn.xml"
-}

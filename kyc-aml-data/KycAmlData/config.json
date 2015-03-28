@@ -1,0 +1,6 @@
+{
+	"host": "localhost",
+	"port": "3332",
+	"protocol": "tcp",
+	"sdn_list_url": "http://www.treasury.gov/ofac/downloads/sdn.xml"
+}
