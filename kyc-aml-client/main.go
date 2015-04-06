@@ -4,7 +4,6 @@ import (
 	kyc_aml_client "./KycAmlClient"
 	"os"
 	"fmt"
-//	"time"
 )
 
 func main() {
@@ -29,7 +28,7 @@ func main() {
 		return
 	}
 	
-	num_query_servers := 2
+	num_query_servers := 3
 	wait_for_training_ch := make(chan int)
 	
 	go (func() {
@@ -50,17 +49,14 @@ func main() {
 		wait_for_training_ch <- 1
 	})()
 	
-	/*
-	go (func(wait_for_training_ch chan int) {
-		
-		for ; num_query_servers_trained < num_query_servers; {
-			time.Sleep(5 * time.Millisecond)
+	go (func() {
+		doublemetaphone_train_sdn_res, err := client.QueryDoubleMetaphoneServer("train_sdn", sdn_list)
+		if err != nil {
+			return
 		}
-		
+		_ = doublemetaphone_train_sdn_res
 		wait_for_training_ch <- 1
-		
-	})(wait_for_training_ch)
-	*/
+	})()
 	
 	for i := 0; i < num_query_servers; i++ {
 		<- wait_for_training_ch
@@ -94,6 +90,17 @@ func main() {
 			}
 			wait_for_queries_ch <- 1
 		})()
+		
+		go (func() {
+			doublemetaphone_name_res, err := client.QueryDoubleMetaphoneServer("query_name", os.Args[1])
+			if err != nil {
+				return
+			}
+			if doublemetaphone_name_res != "{}" {
+				fmt.Printf("DoubleMetaphone name results: %s\n", doublemetaphone_name_res)
+			}
+			wait_for_queries_ch <- 1
+		})()
 	}
 	
 	if len(os.Args) > 2 {
@@ -121,19 +128,18 @@ func main() {
 			}
 			wait_for_queries_ch <- 1
 		})()
+		
+		go (func() {
+			doublemetaphone_address_res, err := client.QueryDoubleMetaphoneServer("query_address", os.Args[2])
+			if err != nil {
+				return
+			}
+			if doublemetaphone_address_res != "{}" {
+				fmt.Printf("DoubleMetaphone address results: %s\n", doublemetaphone_address_res)
+			}
+			wait_for_queries_ch <- 1
+		})()
 	}
-	
-	/*
-	go (func(wait_for_queries_ch chan int) {
-			
-		for ; num_query_responses < num_queries; {
-			time.Sleep(5 * time.Millisecond)
-		}
-		
-		wait_for_queries_ch <- 1
-		
-	})(wait_for_queries_ch)
-	*/
 	
 	for i := 0; i < num_queries; i++ {
 		<- wait_for_queries_ch

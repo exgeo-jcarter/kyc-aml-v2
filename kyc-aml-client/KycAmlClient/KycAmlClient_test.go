@@ -6,6 +6,8 @@ import (
 	"time"
 	"math/rand"
 	"encoding/json"
+	"os/exec"
+	"log"
 	kyc_aml_data "../../kyc-aml-data/KycAmlData"
 	kyc_aml_fuzzy "../../kyc-aml-fuzzy/KycAmlFuzzy"
 	kyc_aml_metaphone "../../kyc-aml-metaphone/KycAmlMetaphone"
@@ -52,10 +54,20 @@ func TestMain(m *testing.M) {
 		os.Exit(5)
 	}
 	
+	
+	// Start a new external server.
+	cmd := exec.Command("../../kyc-aml-doublemetaphone/build/kyc-aml-doublemetaphone", "../../kyc-aml-doublemetaphone/config.json")
+	err = cmd.Start()
+	if err != nil {
+		log.Printf("Error: %v", err)
+		os.Exit(12)
+	}
+	
 	// Listen for connections.
 	go (func() {
 		err = metaphone_server.Listen()
 		if err != nil {
+			cmd.Process.Kill()
 			os.Exit(6)
 		}
 	})()
@@ -64,17 +76,20 @@ func TestMain(m *testing.M) {
 	
 	client, err = NewKycAmlClient("config.json")
 	if err != nil {
+		cmd.Process.Kill()
 		os.Exit(7)
 	}
 	_ = client
 	
 	_, err = client.QueryDataServer("load_sdn_list", "")
 	if err != nil {
+		cmd.Process.Kill()
 		os.Exit(8)
 	}
 	
 	sdn_list, err := client.QueryDataServer("get_sdn_list", "")
 	if err != nil {
+		cmd.Process.Kill()
 		os.Exit(9)
 	}
 	_ = sdn_list
@@ -88,11 +103,21 @@ func TestMain(m *testing.M) {
 
 	metaphone_train_sdn_res, err := client.QueryMetaphoneServer("train_sdn", sdn_list)
 	if err != nil {
+		cmd.Process.Kill()
 		os.Exit(11)
 	}
 	_ = metaphone_train_sdn_res
 	
-	os.Exit(m.Run())
+	doublemetaphone_train_sdn_res, err := client.QueryDoubleMetaphoneServer("train_sdn", sdn_list)
+	if err != nil {
+		cmd.Process.Kill()
+		os.Exit(11)
+	}
+	_ = doublemetaphone_train_sdn_res
+	
+	result := m.Run()
+	cmd.Process.Kill()	// Kill double metaphone server.
+	os.Exit(result)
 }
 
 // --- Tests ---
@@ -101,7 +126,7 @@ func TestMain(m *testing.M) {
 // and record the miss rate.
 func TestFuzzyNameQueryTwoCharsChanged(t *testing.T) {
 	
-	n := 3
+	n := 1
 	threshold := 1.0
 	
 	rand_alphabet := 0
@@ -199,7 +224,7 @@ func TestFuzzyNameQueryTwoCharsChanged(t *testing.T) {
 // and record the miss rate.
 func TestFuzzyNameQueryThreeCharsChanged(t *testing.T) {
 	
-	n := 3
+	n := 1
 	threshold := 80.0
 	
 	rand_alphabet := 0
@@ -549,6 +574,310 @@ func TestMetaphoneNameQueryTwoCharsChanged(t *testing.T) {
 			   (len(res_struct.RevAkaResult) == 0) &&
 			   (len(res_struct.AddressResult) == 0) &&
 			   (len(res_struct.PostalCodeResult) == 0) {
+			   	
+			   	num_misses++
+		    }
+		}
+		
+		miss_rate := float64(num_misses) / float64(num_entries) * 100.0
+		
+		miss_rates = append(miss_rates, miss_rate)
+		
+		if miss_rate > threshold {
+			failed = true
+			failed_miss_rate = miss_rate
+		}
+	}
+	
+	avg_miss_rate := 0.0
+	for _, val := range miss_rates {
+		avg_miss_rate += val
+	}
+	avg_miss_rate = avg_miss_rate / float64(len(miss_rates))
+	
+	t.Logf("Miss rates: %+v", miss_rates)
+	t.Logf("Average miss rate: %v%%", avg_miss_rate)
+	
+	if failed {
+		t.Fatalf("Test failed: Miss rate above threshold: %v%% > %v%%", failed_miss_rate, threshold)
+	}
+	
+	t.Logf("Test passed: Miss rates below threshold: %v%%", threshold)
+}
+
+// DoubleMetaphone search all names from the SDN list with 2 of their characters randomly doubled, 
+// and record the miss rate.
+func TestDoubleMetaphoneNameQueryTwoCharsDoubled(t *testing.T) {
+	
+	n := 3
+	threshold := 10.0
+	
+	rand_pos := 0
+	first_name := ""
+	last_name := ""
+	num_entries := len(metaphone_server.SdnList.SdnEntries)
+	miss_rates := []float64{}
+	failed := false
+	failed_miss_rate := 0.0
+	
+	t.Logf("Num iterations: %v", n)
+	
+	for i := 0; i < n; i++ {
+	
+		rand.Seed(time.Now().UnixNano())
+		num_misses := 0
+	
+		for _, sdn_entry := range metaphone_server.SdnList.SdnEntries {
+			
+			first_name = sdn_entry.FirstName
+			last_name = sdn_entry.LastName
+			
+			if (len(first_name) == 0) && (len(last_name) == 0) {
+				continue
+			}
+			
+			if len(first_name) > 1 {
+				rand_pos = rand.Intn(len(first_name)-1) 
+				first_name = first_name[:rand_pos] + string(first_name[rand_pos]) +string(first_name[rand_pos]) + first_name[rand_pos+1:]
+			}
+			
+			if len(last_name) > 1 {
+				rand_pos = rand.Intn(len(last_name)-1) 
+				last_name = last_name[:rand_pos] + string(last_name[rand_pos]) + string(last_name[rand_pos]) + last_name[rand_pos+1:]
+			}
+			
+			//t.Logf("Querying: %v %v", first_name, last_name)
+			
+			res, err := client.QueryDoubleMetaphoneServer("query_name", first_name+" "+last_name)
+			if err != nil {
+				t.FailNow()
+			}
+			
+			//t.Logf("Result: %v", res)
+			
+			var res_struct *DoubleMetaphoneQueryResS
+			err = json.Unmarshal([]byte(res), &res_struct)
+			if err != nil {
+				t.Fatalf("Error: %v", err)
+			}
+			
+			if (len(res_struct.NameResult1) == 0) &&
+			   (len(res_struct.NameResult2) == 0) &&
+			   (len(res_struct.RevNameResult1) == 0) &&
+			   (len(res_struct.RevNameResult2) == 0) &&
+			   (len(res_struct.AkaResult1) == 0) &&
+			   (len(res_struct.AkaResult2) == 0) &&
+			   (len(res_struct.RevAkaResult1) == 0) &&
+			   (len(res_struct.RevAkaResult2) == 0) &&
+			   (len(res_struct.AddressResult1) == 0) &&
+			   (len(res_struct.AddressResult2) == 0) &&
+			   (len(res_struct.PostalCodeResult1) == 0) &&
+			   (len(res_struct.PostalCodeResult2) == 0) {
+			   	
+			   	num_misses++
+		    }
+		}
+		
+		miss_rate := float64(num_misses) / float64(num_entries) * 100.0
+		
+		miss_rates = append(miss_rates, miss_rate)
+		
+		if miss_rate > threshold {
+			failed = true
+			failed_miss_rate = miss_rate
+		}
+	}
+	
+	avg_miss_rate := 0.0
+	for _, val := range miss_rates {
+		avg_miss_rate += val
+	}
+	avg_miss_rate = avg_miss_rate / float64(len(miss_rates))
+	
+	t.Logf("Miss rates: %+v", miss_rates)
+	t.Logf("Average miss rate: %v%%", avg_miss_rate)
+	
+	if failed {
+		t.Fatalf("Test failed: Miss rate above threshold: %v%% > %v%%", failed_miss_rate, threshold)
+	}
+	
+	t.Logf("Test passed: Miss rates below threshold: %v%%", threshold)
+}
+
+func TestDoubleMetaphoneNameQueryOneCharChanged(t *testing.T) {
+	
+	// Uses metaphone_server's SDN list, so metaphone_server must be trained.
+	
+	n := 3
+	threshold := 80.0
+	
+	rand_alphabet := 0
+	rand_pos := 0
+	first_name := ""
+	last_name := ""
+	num_entries := len(metaphone_server.SdnList.SdnEntries)
+	miss_rates := []float64{}
+	failed := false
+	failed_miss_rate := 0.0
+	
+	t.Logf("Num iterations: %v", n)
+	
+	for i := 0; i < n; i++ {
+	
+		rand.Seed(time.Now().UnixNano())
+		num_misses := 0
+	
+		for idx, sdn_entry := range metaphone_server.SdnList.SdnEntries {
+			_ = idx
+			
+			first_name = sdn_entry.FirstName
+			last_name = sdn_entry.LastName
+			
+			name := first_name+" "+last_name
+			
+			if (len(name) == 0) {
+				continue
+			}
+			
+			if len(name) > 1 {
+				// 1
+				rand_alphabet = rand.Intn(len(alphabet)-1)
+				rand_pos = rand.Intn(len(name)-1) 
+				name = name[:rand_pos] + string(alphabet[rand_alphabet]) + name[rand_pos+1:]
+			}
+			
+			//t.Logf("Querying: %v", name)
+			
+			res, err := client.QueryDoubleMetaphoneServer("query_name", name)
+			if err != nil {
+				t.FailNow()
+			}
+			
+			//t.Logf("Result: %v", res)
+			
+			var res_struct *DoubleMetaphoneQueryResS
+			err = json.Unmarshal([]byte(res), &res_struct)
+			if err != nil {
+				t.Fatalf("Error: %v", err)
+			}
+			
+			if (len(res_struct.NameResult1) == 0) &&
+			   (len(res_struct.NameResult2) == 0) &&
+			   (len(res_struct.RevNameResult1) == 0) &&
+			   (len(res_struct.RevNameResult2) == 0) &&
+			   (len(res_struct.AkaResult1) == 0) &&
+			   (len(res_struct.AkaResult2) == 0) &&
+			   (len(res_struct.RevAkaResult1) == 0) &&
+			   (len(res_struct.RevAkaResult2) == 0) &&
+			   (len(res_struct.AddressResult1) == 0) &&
+			   (len(res_struct.AddressResult2) == 0) &&
+			   (len(res_struct.PostalCodeResult1) == 0) &&
+			   (len(res_struct.PostalCodeResult2) == 0) {
+			   	
+			   	num_misses++
+		    }
+		}
+		
+		miss_rate := float64(num_misses) / float64(num_entries) * 100.0
+		
+		miss_rates = append(miss_rates, miss_rate)
+		
+		if miss_rate > threshold {
+			failed = true
+			failed_miss_rate = miss_rate
+		}
+	}
+	
+	avg_miss_rate := 0.0
+	for _, val := range miss_rates {
+		avg_miss_rate += val
+	}
+	avg_miss_rate = avg_miss_rate / float64(len(miss_rates))
+	
+	t.Logf("Miss rates: %+v", miss_rates)
+	t.Logf("Average miss rate: %v%%", avg_miss_rate)
+	
+	if failed {
+		t.Fatalf("Test failed: Miss rate above threshold: %v%% > %v%%", failed_miss_rate, threshold)
+	}
+	
+	t.Logf("Test passed: Miss rates below threshold: %v%%", threshold)
+}
+
+func TestDoubleMetaphoneNameQueryTwoCharsChanged(t *testing.T) {
+	
+	// Uses metaphone_server's SDN list, so metaphone_server must be trained.
+	
+	n := 3
+	threshold := 92.0
+	
+	rand_alphabet := 0
+	rand_pos := 0
+	first_name := ""
+	last_name := ""
+	num_entries := len(metaphone_server.SdnList.SdnEntries)
+	miss_rates := []float64{}
+	failed := false
+	failed_miss_rate := 0.0
+	
+	t.Logf("Num iterations: %v", n)
+	
+	for i := 0; i < n; i++ {
+	
+		rand.Seed(time.Now().UnixNano())
+		num_misses := 0
+	
+		for idx, sdn_entry := range metaphone_server.SdnList.SdnEntries {
+			_ = idx
+			
+			first_name = sdn_entry.FirstName
+			last_name = sdn_entry.LastName
+			
+			name := first_name+" "+last_name
+			
+			if (len(name) == 0) {
+				continue
+			}
+			
+			if len(name) > 1 {
+				// 1
+				rand_alphabet = rand.Intn(len(alphabet)-1)
+				rand_pos = rand.Intn(len(name)-1) 
+				name = name[:rand_pos] + string(alphabet[rand_alphabet]) + name[rand_pos+1:]
+				
+				// 2
+				rand_alphabet = rand.Intn(len(alphabet)-1)
+				rand_pos = rand.Intn(len(name)-1) 
+				name = name[:rand_pos] + string(alphabet[rand_alphabet]) + name[rand_pos+1:]
+			}
+			
+			//t.Logf("Querying: %v", name)
+			
+			res, err := client.QueryDoubleMetaphoneServer("query_name", name)
+			if err != nil {
+				t.FailNow()
+			}
+			
+			//t.Logf("Result: %v", res)
+			
+			var res_struct *DoubleMetaphoneQueryResS
+			err = json.Unmarshal([]byte(res), &res_struct)
+			if err != nil {
+				t.Fatalf("Error: %v", err)
+			}
+			
+			if (len(res_struct.NameResult1) == 0) &&
+			   (len(res_struct.NameResult2) == 0) &&
+			   (len(res_struct.RevNameResult1) == 0) &&
+			   (len(res_struct.RevNameResult2) == 0) &&
+			   (len(res_struct.AkaResult1) == 0) &&
+			   (len(res_struct.AkaResult2) == 0) &&
+			   (len(res_struct.RevAkaResult1) == 0) &&
+			   (len(res_struct.RevAkaResult2) == 0) &&
+			   (len(res_struct.AddressResult1) == 0) &&
+			   (len(res_struct.AddressResult2) == 0) &&
+			   (len(res_struct.PostalCodeResult1) == 0) &&
+			   (len(res_struct.PostalCodeResult2) == 0) {
 			   	
 			   	num_misses++
 		    }

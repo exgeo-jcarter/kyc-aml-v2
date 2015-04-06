@@ -18,15 +18,18 @@ type KycAmlClientS struct {
 }
 
 type KycAmlClientConfS struct {
-	DataHost 			string	`json:"data_host,omitempty"`
-	DataPort 			string	`json:"data_port,omitempty"`
-	DataProtocol		string	`json:"data_protocol,omitempty"`
-	FuzzyHost 			string	`json:"fuzzy_host,omitempty"`
-	FuzzyPort 			string	`json:"fuzzy_port,omitempty"`
-	FuzzyProtocol		string	`json:"fuzzy_protocol,omitempty"`
-	MetaphoneHost 		string	`json:"metaphone_host,omitempty"`
-	MetaphonePort 		string	`json:"metaphone_port,omitempty"`
-	MetaphoneProtocol	string	`json:"metaphone_protocol,omitempty"`
+	DataHost 				string	`json:"data_host,omitempty"`
+	DataPort 				string	`json:"data_port,omitempty"`
+	DataProtocol			string	`json:"data_protocol,omitempty"`
+	FuzzyHost 				string	`json:"fuzzy_host,omitempty"`
+	FuzzyPort 				string	`json:"fuzzy_port,omitempty"`
+	FuzzyProtocol			string	`json:"fuzzy_protocol,omitempty"`
+	MetaphoneHost 			string	`json:"metaphone_host,omitempty"`
+	MetaphonePort 			string	`json:"metaphone_port,omitempty"`
+	MetaphoneProtocol		string	`json:"metaphone_protocol,omitempty"`
+	DoubleMetaphoneHost 	string	`json:"doublemetaphone_host,omitempty"`
+	DoubleMetaphonePort 	string	`json:"doublemetaphone_port,omitempty"`
+	DoubleMetaphoneProtocol	string	`json:"doublemetaphone_protocol,omitempty"`
 }
 
 // Initialize the client.
@@ -155,6 +158,12 @@ func (this *KycAmlClientS) QueryFuzzyServer(action, value string) (res string, e
 func (this *KycAmlClientS) QueryMetaphoneServer(action, value string) (res string, err error) {
 	
 	res, err = this.QueryServer(this.Conf.MetaphoneProtocol, this.Conf.MetaphoneHost, this.Conf.MetaphonePort, action, value)
+	return
+}
+
+func (this *KycAmlClientS) QueryDoubleMetaphoneServer(action, value string) (res string, err error) {
+	
+	res, err = this.QueryServer(this.Conf.DoubleMetaphoneProtocol, this.Conf.DoubleMetaphoneHost, this.Conf.DoubleMetaphonePort, action, value)
 	return
 }
 

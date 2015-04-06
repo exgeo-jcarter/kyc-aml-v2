@@ -9,5 +9,9 @@
 	
 	"metaphone_host": "localhost",
 	"metaphone_port": "3334",
-	"metaphone_protocol": "tcp"
+	"metaphone_protocol": "tcp",
+	
+	"doublemetaphone_host": "localhost",
+	"doublemetaphone_port": "3335",
+	"doublemetaphone_protocol": "tcp"
 }

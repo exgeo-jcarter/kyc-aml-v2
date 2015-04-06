@@ -9,4 +9,8 @@ go build
 cd ../kyc-aml-metaphone
 go build
 ./kyc-aml-metaphone&
-cd ..
+cd ../kyc-aml-doublemetaphone/build
+cmake ..
+make
+./kyc-aml-doublemetaphone&
+cd ../..
