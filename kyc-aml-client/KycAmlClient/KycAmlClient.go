@@ -167,6 +167,137 @@ func (this *KycAmlClientS) QueryDoubleMetaphoneServer(action, value string) (res
 	return
 }
 
+func (this *KycAmlClientS) CalculateRiskScore(q, aq, f_name_res, f_add_res, m_name_res, m_add_res, dm_name_res, dm_add_res string) (score float64, err error) {
+	
+	num_queries := 0.0
+	num_results := 0.0
+	
+	if q != "" {
+		num_queries += 6
+	}
+	
+	if aq != "" {
+		num_queries += 4
+	}
+	
+	var f_name_res_json FuzzyQueryResS
+	err = json.Unmarshal([]byte(f_name_res), &f_name_res_json)
+	if err != nil {
+		log.Printf("Error: %v", err)
+		return
+	}
+	if len(f_name_res_json.NameResult) > 0 {
+		num_results++
+	}
+	if len(f_name_res_json.RevNameResult) > 0 {
+		num_results++
+	}
+	if len(f_name_res_json.AkaResult) > 0 {
+		num_results++
+	}
+	if len(f_name_res_json.RevAkaResult) > 0 {
+		num_results++
+	}
+	
+	var f_add_res_json FuzzyQueryResS
+	err = json.Unmarshal([]byte(f_add_res), &f_add_res_json)
+	if err != nil {
+		log.Printf("Error: %v", err)
+		return
+	}
+	if len(f_add_res_json.AddressResult) > 0 {
+		num_results++
+	}
+	if len(f_add_res_json.PostalCodeResult) > 0 {
+		num_results++
+	}
+	
+	var m_name_res_json MetaphoneQueryResS
+	err = json.Unmarshal([]byte(m_name_res), &m_name_res_json)
+	if err != nil {
+		log.Printf("Error: %v", err)
+		return
+	}
+	if len(m_name_res_json.NameResult) > 0 {
+		num_results++
+	}
+	if len(m_name_res_json.RevNameResult) > 0 {
+		num_results++
+	}
+	if len(m_name_res_json.AkaResult) > 0 {
+		num_results++
+	}
+	if len(m_name_res_json.RevAkaResult) > 0 {
+		num_results++
+	}
+	
+	var m_add_res_json MetaphoneQueryResS
+	err = json.Unmarshal([]byte(m_add_res), &m_add_res_json)
+	if err != nil {
+		log.Printf("Error: %v", err)
+		return
+	}
+	if len(m_add_res_json.AddressResult) > 0 {
+		num_results++
+	}
+	if len(m_add_res_json.PostalCodeResult) > 0 {
+		num_results++
+	}
+	
+	var dm_name_res_json DoubleMetaphoneQueryResS
+	err = json.Unmarshal([]byte(dm_name_res), &dm_name_res_json)
+	if err != nil {
+		log.Printf("Error: %v", err)
+		return
+	}
+	if len(dm_name_res_json.NameResult1) > 0 {
+		num_results++
+	}
+	if len(dm_name_res_json.NameResult2) > 0 {
+		num_results++
+	}
+	if len(dm_name_res_json.RevNameResult1) > 0 {
+		num_results++
+	}
+	if len(dm_name_res_json.RevNameResult2) > 0 {
+		num_results++
+	}
+	if len(dm_name_res_json.AkaResult1) > 0 {
+		num_results++
+	}
+	if len(dm_name_res_json.AkaResult2) > 0 {
+		num_results++
+	}
+	if len(dm_name_res_json.RevAkaResult1) > 0 {
+		num_results++
+	}
+	if len(dm_name_res_json.RevAkaResult2) > 0 {
+		num_results++
+	}
+	
+	var dm_add_res_json DoubleMetaphoneQueryResS
+	err = json.Unmarshal([]byte(dm_add_res), &dm_add_res_json)
+	if err != nil {
+		log.Printf("Error: %v", err)
+		return
+	}
+	if len(dm_add_res_json.AddressResult1) > 0 {
+		num_results++
+	}
+	if len(dm_add_res_json.AddressResult2) > 0 {
+		num_results++
+	}
+	if len(dm_add_res_json.PostalCodeResult1) > 0 {
+		num_results++
+	}
+	if len(dm_add_res_json.PostalCodeResult2) > 0 {
+		num_results++
+	}
+	
+	score = num_results / num_queries * 100.0
+	return
+}
+
 /*
 // Calculates amount of risk, based on how close our match was to the original query.
 func (this *kycAmlFuzzyS) CalculateRiskScore(q, mq string, res, mres []string) (score float64) {

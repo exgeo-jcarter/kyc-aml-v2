@@ -65,12 +65,21 @@ func main() {
 	num_queries := 0
 	wait_for_queries_ch := make(chan int)
 	
+	aq := ""
+	
+	fuzzy_name_res := "{}"
+	fuzzy_address_res := "{}"
+	metaphone_name_res := "{}"
+	metaphone_address_res := "{}"
+	doublemetaphone_name_res := "{}"
+	doublemetaphone_address_res := "{}"
+	
 	if os.Args[1] != "" {
 		
 		num_queries += num_query_servers
 		
 		go (func() {
-			fuzzy_name_res, err := client.QueryFuzzyServer("query_name", os.Args[1])
+			fuzzy_name_res, err = client.QueryFuzzyServer("query_name", os.Args[1])
 			if err != nil {
 				return
 			}
@@ -81,7 +90,7 @@ func main() {
 		})()
 		
 		go (func() {
-			metaphone_name_res, err := client.QueryMetaphoneServer("query_name", os.Args[1])
+			metaphone_name_res, err = client.QueryMetaphoneServer("query_name", os.Args[1])
 			if err != nil {
 				return
 			}
@@ -92,7 +101,7 @@ func main() {
 		})()
 		
 		go (func() {
-			doublemetaphone_name_res, err := client.QueryDoubleMetaphoneServer("query_name", os.Args[1])
+			doublemetaphone_name_res, err = client.QueryDoubleMetaphoneServer("query_name", os.Args[1])
 			if err != nil {
 				return
 			}
@@ -106,9 +115,10 @@ func main() {
 	if len(os.Args) > 2 {
 		
 		num_queries += num_query_servers
+		aq = os.Args[2]
 		
 		go (func() {
-			fuzzy_address_res, err := client.QueryFuzzyServer("query_address", os.Args[2])
+			fuzzy_address_res, err = client.QueryFuzzyServer("query_address", os.Args[2])
 			if err != nil {
 				return
 			}
@@ -119,7 +129,7 @@ func main() {
 		})()
 		
 		go (func() {
-			metaphone_address_res, err := client.QueryMetaphoneServer("query_address", os.Args[2])
+			metaphone_address_res, err = client.QueryMetaphoneServer("query_address", os.Args[2])
 			if err != nil {
 				return
 			}
@@ -130,7 +140,7 @@ func main() {
 		})()
 		
 		go (func() {
-			doublemetaphone_address_res, err := client.QueryDoubleMetaphoneServer("query_address", os.Args[2])
+			doublemetaphone_address_res, err = client.QueryDoubleMetaphoneServer("query_address", os.Args[2])
 			if err != nil {
 				return
 			}
@@ -144,4 +154,11 @@ func main() {
 	for i := 0; i < num_queries; i++ {
 		<- wait_for_queries_ch
 	}
+	
+	risk_score, err := client.CalculateRiskScore(os.Args[1], aq, fuzzy_name_res, fuzzy_address_res, metaphone_name_res, metaphone_address_res, doublemetaphone_name_res, doublemetaphone_address_res)
+	if err != nil {
+		return
+	}
+	
+	fmt.Printf("Risk score: %v\n", risk_score)
 }
