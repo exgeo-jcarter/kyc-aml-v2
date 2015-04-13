@@ -218,6 +218,14 @@ func (this *KycAmlMetaphoneS) handleRequest(con net.Conn) {
 		// Respond to client.
 		con.Write([]byte(`{"result": "Training SDN list complete."}`+"\n"))
 		
+	case "lookup_sdn_entry":
+	
+		err = this.LookupSdnEntry(con, &socketMsg)
+		if err != nil {
+			con.Close()
+			return
+		}
+		
 	// If a query was requested, query all fuzzy models.
 	default:
 		this.Query(con, &socketMsg)
@@ -325,4 +333,108 @@ func (this *KycAmlMetaphoneS) Query(con net.Conn, socketMsg *SocketMsgS) {
 	
 	res_bytes = append(res_bytes, []byte("\n")...)
 	con.Write(res_bytes)
+}
+
+func (this *KycAmlMetaphoneS) LookupSdnEntry(con net.Conn, socketMsg *SocketMsgS) (err error) {
+	
+	for _, sdn_entry := range this.SdnList.SdnEntries {
+		
+		name := strings.ToLower(sdn_entry.FirstName) + " " + strings.ToLower(sdn_entry.LastName)
+		if socketMsg.Value == name {
+			
+			var res []byte
+			res, err = json.Marshal(sdn_entry)
+			if err != nil {
+				log.Printf("Error: %v", err)
+				return
+			}
+			
+			res = append(res, []byte("\n")...)
+			con.Write(res)
+			return
+		}
+		
+		revname := strings.ToLower(sdn_entry.LastName) + " " + strings.ToLower(sdn_entry.FirstName)
+		if socketMsg.Value == revname {
+			
+			var res []byte
+			res, err = json.Marshal(sdn_entry)
+			if err != nil {
+				log.Printf("Error: %v", err)
+				return
+			}
+			
+			res = append(res, []byte("\n")...)
+			con.Write(res)
+			return
+		}
+		
+		for _, aka := range sdn_entry.AkaList.Akas {
+			
+			aka_entry := strings.ToLower(aka.FirstName) + " " + strings.ToLower(aka.LastName)
+			if socketMsg.Value == aka_entry {
+			
+				var res []byte
+				res, err = json.Marshal(sdn_entry)
+				if err != nil {
+					log.Printf("Error: %v", err)
+					return
+				}
+				
+				res = append(res, []byte("\n")...)
+				con.Write(res)
+				return
+			}
+			
+			revaka := strings.ToLower(aka.LastName) + " " + strings.ToLower(aka.FirstName)
+			if socketMsg.Value == revaka {
+			
+				var res []byte
+				res, err = json.Marshal(sdn_entry)
+				if err != nil {
+					log.Printf("Error: %v", err)
+					return
+				}
+				
+				res = append(res, []byte("\n")...)
+				con.Write(res)
+				return
+			}
+		}
+		
+		for _, address := range sdn_entry.AddressList.Addresses {
+		
+			address1 := strings.ToLower(address.Address1)
+			if socketMsg.Value == address1 {
+			
+				var res []byte
+				res, err = json.Marshal(sdn_entry)
+				if err != nil {
+					log.Printf("Error: %v", err)
+					return
+				}
+				
+				res = append(res, []byte("\n")...)
+				con.Write(res)
+				return
+			}
+			
+			postal_code := strings.ToLower(address.PostalCode)
+			if socketMsg.Value == postal_code {
+			
+				var res []byte
+				res, err = json.Marshal(sdn_entry)
+				if err != nil {
+					log.Printf("Error: %v", err)
+					return
+				}
+				
+				res = append(res, []byte("\n")...)
+				con.Write(res)
+				return
+			}
+		}
+	}
+	
+	return
 }

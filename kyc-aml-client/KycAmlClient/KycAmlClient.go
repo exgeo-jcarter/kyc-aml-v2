@@ -11,6 +11,7 @@ import (
 	"bufio"
 	"io/ioutil"
 	"strings"
+	//"fmt"
 )
 
 type KycAmlClientS struct {
@@ -295,6 +296,296 @@ func (this *KycAmlClientS) CalculateRiskScore(q, aq, f_name_res, f_add_res, m_na
 	}
 	
 	score = num_results / num_queries * 100.0
+	return
+}
+
+// Looks up an entry in the SDN list.
+func (this *KycAmlClientS) LookupSdnEntry(f_name_res, f_add_res, m_name_res, m_add_res, dm_name_res, dm_add_res string) (res string, err error) {
+	
+	var f_name_res_json FuzzyQueryResS
+	err = json.Unmarshal([]byte(f_name_res), &f_name_res_json)
+	if err != nil {
+		log.Printf("Error: %v", err)
+		return
+	}
+	
+	var f_add_res_json FuzzyQueryResS
+	err = json.Unmarshal([]byte(f_add_res), &f_add_res_json)
+	if err != nil {
+		log.Printf("Error: %v", err)
+		return
+	}
+	
+	var m_name_res_json MetaphoneQueryResS
+	err = json.Unmarshal([]byte(m_name_res), &m_name_res_json)
+	if err != nil {
+		log.Printf("Error: %v", err)
+		return
+	}
+	
+	var m_add_res_json MetaphoneQueryResS
+	err = json.Unmarshal([]byte(m_add_res), &m_add_res_json)
+	if err != nil {
+		log.Printf("Error: %v", err)
+		return
+	}
+	
+	var dm_name_res_json DoubleMetaphoneQueryResS
+	err = json.Unmarshal([]byte(dm_name_res), &dm_name_res_json)
+	if err != nil {
+		log.Printf("Error: %v", err)
+		return
+	}
+	
+	var dm_add_res_json DoubleMetaphoneQueryResS
+	err = json.Unmarshal([]byte(dm_add_res), &dm_add_res_json)
+	if err != nil {
+		log.Printf("Error: %v", err)
+		return
+	}
+	
+	var sdn_entry_res string
+	
+	if len(f_name_res_json.NameResult) > 0 {
+	
+		sdn_entry_res, err = this.QueryMetaphoneServer("lookup_sdn_entry", f_name_res_json.NameResult[0])
+		if err != nil {
+			return
+		}
+		res = sdn_entry_res
+		return
+	}
+	
+	if len(f_name_res_json.RevNameResult) > 0 {
+		
+		sdn_entry_res, err = this.QueryMetaphoneServer("lookup_sdn_entry", f_name_res_json.RevNameResult[0])
+		if err != nil {
+			return
+		}
+		res = sdn_entry_res
+		return
+	}
+	
+	if len(f_name_res_json.AkaResult) > 0 {
+		
+		sdn_entry_res, err = this.QueryMetaphoneServer("lookup_sdn_entry", f_name_res_json.AkaResult[0])
+		if err != nil {
+			return
+		}
+		res = sdn_entry_res
+		return
+	}
+	
+	if len(f_name_res_json.RevAkaResult) > 0 {
+		
+		sdn_entry_res, err = this.QueryMetaphoneServer("lookup_sdn_entry", f_name_res_json.RevAkaResult[0])
+		if err != nil {
+			return
+		}
+		res = sdn_entry_res
+		return
+	}
+	
+	if len(f_add_res_json.AddressResult) > 0 {
+		
+		sdn_entry_res, err = this.QueryMetaphoneServer("lookup_sdn_entry", f_add_res_json.AddressResult[0])
+		if err != nil {
+			return
+		}
+		res = sdn_entry_res
+		return
+	}
+	
+	if len(f_add_res_json.PostalCodeResult) > 0 {
+		
+		sdn_entry_res, err = this.QueryMetaphoneServer("lookup_sdn_entry", f_add_res_json.PostalCodeResult[0])
+		if err != nil {
+			return
+		}
+		res = sdn_entry_res
+		return
+	}
+	
+	if len(m_name_res_json.NameResult) > 0 {
+	
+		sdn_entry_res, err = this.QueryMetaphoneServer("lookup_sdn_entry", m_name_res_json.NameResult[0])
+		if err != nil {
+			return
+		}
+		res = sdn_entry_res
+		return
+	}
+	
+	if len(m_name_res_json.RevNameResult) > 0 {
+		
+		sdn_entry_res, err = this.QueryMetaphoneServer("lookup_sdn_entry", m_name_res_json.RevNameResult[0])
+		if err != nil {
+			return
+		}
+		res = sdn_entry_res
+		return
+	}
+	
+	if len(m_name_res_json.AkaResult) > 0 {
+		
+		sdn_entry_res, err = this.QueryMetaphoneServer("lookup_sdn_entry", m_name_res_json.AkaResult[0])
+		if err != nil {
+			return
+		}
+		res = sdn_entry_res
+		return
+	}
+	
+	if len(m_name_res_json.RevAkaResult) > 0 {
+		
+		sdn_entry_res, err = this.QueryMetaphoneServer("lookup_sdn_entry", m_name_res_json.RevAkaResult[0])
+		if err != nil {
+			return
+		}
+		res = sdn_entry_res
+		return
+	}
+	
+	if len(m_add_res_json.AddressResult) > 0 {
+		
+		sdn_entry_res, err = this.QueryMetaphoneServer("lookup_sdn_entry", m_add_res_json.AddressResult[0])
+		if err != nil {
+			return
+		}
+		res = sdn_entry_res
+		return
+	}
+	
+	if len(m_add_res_json.PostalCodeResult) > 0 {
+		
+		sdn_entry_res, err = this.QueryMetaphoneServer("lookup_sdn_entry", m_add_res_json.PostalCodeResult[0])
+		if err != nil {
+			return
+		}
+		res = sdn_entry_res
+		return
+	}
+	
+	if len(dm_name_res_json.NameResult1) > 0 {
+	
+		sdn_entry_res, err = this.QueryMetaphoneServer("lookup_sdn_entry", dm_name_res_json.NameResult1[0])
+		if err != nil {
+			return
+		}
+		res = sdn_entry_res
+		return
+	}
+	
+	if len(dm_name_res_json.NameResult2) > 0 {
+	
+		sdn_entry_res, err = this.QueryMetaphoneServer("lookup_sdn_entry", dm_name_res_json.NameResult2[0])
+		if err != nil {
+			return
+		}
+		res = sdn_entry_res
+		return
+	}
+	
+	if len(dm_name_res_json.RevNameResult1) > 0 {
+		
+		sdn_entry_res, err = this.QueryMetaphoneServer("lookup_sdn_entry", dm_name_res_json.RevNameResult1[0])
+		if err != nil {
+			return
+		}
+		res = sdn_entry_res
+		return
+	}
+	
+	if len(dm_name_res_json.RevNameResult2) > 0 {
+		
+		sdn_entry_res, err = this.QueryMetaphoneServer("lookup_sdn_entry", dm_name_res_json.RevNameResult2[0])
+		if err != nil {
+			return
+		}
+		res = sdn_entry_res
+		return
+	}
+	
+	if len(dm_name_res_json.AkaResult1) > 0 {
+		
+		sdn_entry_res, err = this.QueryMetaphoneServer("lookup_sdn_entry", dm_name_res_json.AkaResult1[0])
+		if err != nil {
+			return
+		}
+		res = sdn_entry_res
+		return
+	}
+	
+	if len(dm_name_res_json.AkaResult2) > 0 {
+		
+		sdn_entry_res, err = this.QueryMetaphoneServer("lookup_sdn_entry", dm_name_res_json.AkaResult2[0])
+		if err != nil {
+			return
+		}
+		res = sdn_entry_res
+		return
+	}
+	
+	if len(dm_name_res_json.RevAkaResult1) > 0 {
+		
+		sdn_entry_res, err = this.QueryMetaphoneServer("lookup_sdn_entry", dm_name_res_json.RevAkaResult1[0])
+		if err != nil {
+			return
+		}
+		res = sdn_entry_res
+		return
+	}
+	
+	if len(dm_name_res_json.RevAkaResult2) > 0 {
+		
+		sdn_entry_res, err = this.QueryMetaphoneServer("lookup_sdn_entry", dm_name_res_json.RevAkaResult2[0])
+		if err != nil {
+			return
+		}
+		res = sdn_entry_res
+		return
+	}
+	
+	if len(dm_add_res_json.AddressResult1) > 0 {
+		
+		sdn_entry_res, err = this.QueryMetaphoneServer("lookup_sdn_entry", dm_add_res_json.AddressResult1[0])
+		if err != nil {
+			return
+		}
+		res = sdn_entry_res
+		return
+	}
+	
+	if len(dm_add_res_json.AddressResult2) > 0 {
+		
+		sdn_entry_res, err = this.QueryMetaphoneServer("lookup_sdn_entry", dm_add_res_json.AddressResult2[0])
+		if err != nil {
+			return
+		}
+		res = sdn_entry_res
+		return
+	}
+	
+	if len(dm_add_res_json.PostalCodeResult1) > 0 {
+		
+		sdn_entry_res, err = this.QueryMetaphoneServer("lookup_sdn_entry", dm_add_res_json.PostalCodeResult1[0])
+		if err != nil {
+			return
+		}
+		res = sdn_entry_res
+		return
+	}
+	
+	if len(dm_add_res_json.PostalCodeResult2) > 0 {
+		
+		sdn_entry_res, err = this.QueryMetaphoneServer("lookup_sdn_entry", dm_add_res_json.PostalCodeResult2[0])
+		if err != nil {
+			return
+		}
+		res = sdn_entry_res
+		return
+	}
+	
 	return
 }
 

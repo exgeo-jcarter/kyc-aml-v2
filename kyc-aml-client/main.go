@@ -161,4 +161,11 @@ func main() {
 	}
 	
 	fmt.Printf("Risk score: %v\n", risk_score)
+	
+	sdn_entry_res, err := client.LookupSdnEntry(fuzzy_name_res, fuzzy_address_res, metaphone_name_res, metaphone_address_res, doublemetaphone_name_res, doublemetaphone_address_res)
+	if err != nil {
+		return
+	}
+	
+	fmt.Printf("SDN entry: %s\n", sdn_entry_res)
 }
