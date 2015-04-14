@@ -4,6 +4,8 @@ import (
 	kyc_aml_client "./KycAmlClient"
 	"os"
 	"fmt"
+	"time"
+	"log"
 )
 
 func main() {
@@ -74,6 +76,13 @@ func main() {
 	doublemetaphone_name_res := "{}"
 	doublemetaphone_address_res := "{}"
 	
+	logfile, err := os.OpenFile("kyc-aml.log", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+	if err != nil {
+		log.Printf("Error: %v", err)
+		return
+	}
+	defer logfile.Close()
+	
 	if os.Args[1] != "" {
 		
 		num_queries += num_query_servers
@@ -85,6 +94,13 @@ func main() {
 			}
 			if fuzzy_name_res != "{}" {
 				fmt.Printf("Fuzzy name results: %s\n", fuzzy_name_res)
+				
+				t := time.Now().UTC().Format("2006-01-02 15:04:05")
+				_, err = logfile.WriteString(t + " - Fuzzy name results: " + fuzzy_name_res + "\n")
+				if err != nil {
+					log.Printf("Error: %v", err)
+					return
+				}
 			}
 			wait_for_queries_ch <- 1
 		})()
@@ -96,6 +112,13 @@ func main() {
 			}
 			if metaphone_name_res != "{}" {
 				fmt.Printf("Metaphone name results: %s\n", metaphone_name_res)
+				
+				t := time.Now().UTC().Format("2006-01-02 15:04:05")
+				_, err = logfile.WriteString(t + " - Metaphone name results: " + metaphone_name_res + "\n")
+				if err != nil {
+					log.Printf("Error: %v", err)
+					return
+				}
 			}
 			wait_for_queries_ch <- 1
 		})()
@@ -107,6 +130,13 @@ func main() {
 			}
 			if doublemetaphone_name_res != "{}" {
 				fmt.Printf("DoubleMetaphone name results: %s\n", doublemetaphone_name_res)
+				
+				t := time.Now().UTC().Format("2006-01-02 15:04:05")
+				_, err = logfile.WriteString(t + " - DoubleMetaphone name results: " + doublemetaphone_name_res + "\n")
+				if err != nil {
+					log.Printf("Error: %v", err)
+					return
+				}
 			}
 			wait_for_queries_ch <- 1
 		})()
@@ -124,6 +154,13 @@ func main() {
 			}
 			if fuzzy_address_res != "{}" {
 				fmt.Printf("Fuzzy address results: %s\n", fuzzy_address_res)
+				
+				t := time.Now().UTC().Format("2006-01-02 15:04:05")
+				_, err = logfile.WriteString(t + " - Fuzzy address results: " + fuzzy_address_res + "\n")
+				if err != nil {
+					log.Printf("Error: %v", err)
+					return
+				}
 			}
 			wait_for_queries_ch <- 1
 		})()
@@ -135,6 +172,13 @@ func main() {
 			}
 			if metaphone_address_res != "{}" {
 				fmt.Printf("Metaphone address results: %s\n", metaphone_address_res)
+				
+				t := time.Now().UTC().Format("2006-01-02 15:04:05")
+				_, err = logfile.WriteString(t + " - Metaphone address results: " + metaphone_address_res + "\n")
+				if err != nil {
+					log.Printf("Error: %v", err)
+					return
+				}
 			}
 			wait_for_queries_ch <- 1
 		})()
@@ -146,6 +190,13 @@ func main() {
 			}
 			if doublemetaphone_address_res != "{}" {
 				fmt.Printf("DoubleMetaphone address results: %s\n", doublemetaphone_address_res)
+				
+				t := time.Now().UTC().Format("2006-01-02 15:04:05")
+				_, err = logfile.WriteString(t + " - DoubleMetaphone address results: " + doublemetaphone_address_res + "\n")
+				if err != nil {
+					log.Printf("Error: %v", err)
+					return
+				}
 			}
 			wait_for_queries_ch <- 1
 		})()
@@ -161,6 +212,12 @@ func main() {
 	}
 	
 	fmt.Printf("Risk score: %v\n", risk_score)
+	t := time.Now().UTC().Format("2006-01-02 15:04:05")
+	_, err = logfile.WriteString(t + " - Risk score: " + fmt.Sprintf("%v", risk_score) + "\n")
+	if err != nil {
+		log.Printf("Error: %v", err)
+		return
+	}
 	
 	sdn_entry_res, err := client.LookupSdnEntry(fuzzy_name_res, fuzzy_address_res, metaphone_name_res, metaphone_address_res, doublemetaphone_name_res, doublemetaphone_address_res)
 	if err != nil {
@@ -168,4 +225,17 @@ func main() {
 	}
 	
 	fmt.Printf("SDN entry: %s\n", sdn_entry_res)
+	t = time.Now().UTC().Format("2006-01-02 15:04:05")
+	_, err = logfile.WriteString(t + " - SDN entry: " + sdn_entry_res + "\n")
+	if err != nil {
+		log.Printf("Error: %v", err)
+		return
+	}
+	
+	t = time.Now().UTC().Format("2006-01-02 15:04:05")
+	_, err = logfile.WriteString(t + " ----------\n")
+	if err != nil {
+		log.Printf("Error: %v", err)
+		return
+	}
 }
