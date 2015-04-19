@@ -13,4 +13,7 @@ cd ../kyc-aml-doublemetaphone/build
 cmake ..
 make
 ./kyc-aml-doublemetaphone&
-cd ../..
+cd ../../kyc-aml-clientserver
+go build
+./kyc-aml-clientserver&
+cd ..
