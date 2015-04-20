@@ -383,6 +383,13 @@ func (this *KycAmlClientServerS) handleRequest(con net.Conn) {
 			return
 		}
 		
+		var sdn_entry_res_struct SdnEntryS
+		err = json.Unmarshal([]byte(sdn_entry_res), &sdn_entry_res_struct)
+		if err != nil {
+			log.Printf("Error: %v", err)
+			return
+		}
+		
 		msg := ClientServerQueryResS{
 			FuzzyName: 				fuzzy_name_res_struct,
 			FuzzyAddress: 			fuzzy_address_res_struct,
@@ -390,6 +397,7 @@ func (this *KycAmlClientServerS) handleRequest(con net.Conn) {
 			MetaphoneAddress: 		metaphone_address_res_struct,
 			DoubleMetaphoneName: 	doublemetaphone_name_res_struct,
 			DoubleMetaphoneAddress: doublemetaphone_address_res_struct,
+			SdnEntry:				sdn_entry_res_struct,
 			RiskScore:				risk_score,
 		}
 	

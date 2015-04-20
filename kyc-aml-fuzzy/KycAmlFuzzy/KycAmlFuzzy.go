@@ -325,25 +325,49 @@ func (this *KycAmlFuzzyS) Query(con net.Conn, socketMsg *SocketMsgS) {
 	
 		go (func() {
 			name_q_result = this.FuzzyModelNames.Suggestions(fuzzy_query, false)
-			name_q_result = name_q_result[10:]
+			
+			if len(name_q_result) > 10 {
+				name_q_result = name_q_result[10:]
+			} else {
+				name_q_result = []string{}
+			}
+			
 			wait_for_query_results_ch <- 1
 		})()
 		
 		go (func() {
 			revname_q_result = this.FuzzyModelRevNames.Suggestions(fuzzy_query, false)
-			revname_q_result = revname_q_result[10:]
+			
+			if len(revname_q_result) > 10 {
+				revname_q_result = revname_q_result[10:]
+			} else {
+				revname_q_result = []string{}
+			}
+			
 			wait_for_query_results_ch <- 1
 		})()
 		
 		go (func() {
 			aka_q_result = this.FuzzyModelAkas.Suggestions(fuzzy_query, false)
-			aka_q_result = aka_q_result[10:]
+			
+			if len(aka_q_result) > 10 {
+				aka_q_result = aka_q_result[10:]
+			} else {
+				aka_q_result = []string{}
+			}
+			
 			wait_for_query_results_ch <- 1
 		})()
 		
 		go (func() {
 			revaka_q_result = this.FuzzyModelRevAkas.Suggestions(fuzzy_query, false)
-			revaka_q_result = revaka_q_result[10:]
+			
+			if len(revaka_q_result) > 10 {
+				revaka_q_result = revaka_q_result[10:]
+			} else {
+				revaka_q_result = []string{}
+			}
+			
 			wait_for_query_results_ch <- 1
 		})()
 		
@@ -352,13 +376,25 @@ func (this *KycAmlFuzzyS) Query(con net.Conn, socketMsg *SocketMsgS) {
 	
 		go (func() {
 			address_q_result = this.FuzzyModelAddresses.Suggestions(fuzzy_query, false)
-			address_q_result = address_q_result[10:]
+			
+			if len(address_q_result) > 10 {
+				address_q_result = address_q_result[10:]
+			} else {
+				address_q_result = []string{}
+			}
+			
 			wait_for_query_results_ch <- 1
 		})()
 		
 		go (func() {
 			postal_code_q_result = this.FuzzyModelPostalCodes.Suggestions(fuzzy_query, false)
-			postal_code_q_result = postal_code_q_result[10:]
+			
+			if len(postal_code_q_result) > 10 {
+				postal_code_q_result = postal_code_q_result[10:]
+			} else {
+				postal_code_q_result = []string{}
+			}
+			
 			wait_for_query_results_ch <- 1
 		})()
 	}
