@@ -328,7 +328,7 @@ func (this *KycAmlFuzzyS) Query(con net.Conn, socketMsg *SocketMsgS) {
 			
 			if len(name_q_result) > 10 {
 				name_q_result = name_q_result[10:]
-			} else {
+			} else if len(name_q_result) == 10 {
 				name_q_result = []string{}
 			}
 			
@@ -340,7 +340,7 @@ func (this *KycAmlFuzzyS) Query(con net.Conn, socketMsg *SocketMsgS) {
 			
 			if len(revname_q_result) > 10 {
 				revname_q_result = revname_q_result[10:]
-			} else {
+			} else if len(revname_q_result) == 10 {
 				revname_q_result = []string{}
 			}
 			
@@ -352,7 +352,7 @@ func (this *KycAmlFuzzyS) Query(con net.Conn, socketMsg *SocketMsgS) {
 			
 			if len(aka_q_result) > 10 {
 				aka_q_result = aka_q_result[10:]
-			} else {
+			} else if len(aka_q_result) == 10 {
 				aka_q_result = []string{}
 			}
 			
@@ -364,7 +364,7 @@ func (this *KycAmlFuzzyS) Query(con net.Conn, socketMsg *SocketMsgS) {
 			
 			if len(revaka_q_result) > 10 {
 				revaka_q_result = revaka_q_result[10:]
-			} else {
+			} else if len(revaka_q_result) == 10 {
 				revaka_q_result = []string{}
 			}
 			
@@ -379,7 +379,7 @@ func (this *KycAmlFuzzyS) Query(con net.Conn, socketMsg *SocketMsgS) {
 			
 			if len(address_q_result) > 10 {
 				address_q_result = address_q_result[10:]
-			} else {
+			} else if len(address_q_result) == 10 {
 				address_q_result = []string{}
 			}
 			
@@ -391,7 +391,7 @@ func (this *KycAmlFuzzyS) Query(con net.Conn, socketMsg *SocketMsgS) {
 			
 			if len(postal_code_q_result) > 10 {
 				postal_code_q_result = postal_code_q_result[10:]
-			} else {
+			} else if len(postal_code_q_result) == 10 {
 				postal_code_q_result = []string{}
 			}
 			
