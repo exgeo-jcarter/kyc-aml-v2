@@ -103,6 +103,17 @@ func (this *KycAmlClientServerS) Listen() (err error) {
 // TODO: here
 func (this *KycAmlClientServerS) handleRequest(con net.Conn) {
 	
+	// Gob request
+	decoder := gob.NewDecoder(con)
+	var socketMsg ClientServerQueryReqS
+	err := decoder.Decode(&socketMsg)
+	if err != nil {
+		log.Printf("Error: %v", err)
+		con.Close()
+		return
+	}
+	
+	/*	// JSON request
 	conbuf := bufio.NewReader(con)
 	
 	// Read buffer until newline.
@@ -120,10 +131,11 @@ func (this *KycAmlClientServerS) handleRequest(con net.Conn) {
 		con.Close()
 		return
 	}
+	*/
 	
 	if socketMsg.QueryName != "" || socketMsg.QueryAddress != "" {
 
-			_, err = this.QueryDataServer("load_sdn_list", "")
+		_, err = this.QueryDataServer("load_sdn_list", "")
 		if err != nil {
 			return
 		}
