@@ -14,6 +14,7 @@ import (
 	"fmt"
 	"os"
 	"time"
+	"encoding/gob"
 )
 
 type KycAmlClientServerS struct {
@@ -390,6 +391,107 @@ func (this *KycAmlClientServerS) handleRequest(con net.Conn) {
 			return
 		}
 		
+		matches := []string{}
+		
+		if len(fuzzy_name_res_struct.NameResult) > 0 {
+			matches = append(matches, fuzzy_name_res_struct.NameResult...)
+		}
+		
+		if len(fuzzy_name_res_struct.RevNameResult) > 0 {
+			matches = append(matches, fuzzy_name_res_struct.RevNameResult...)
+		}
+		
+		if len(fuzzy_name_res_struct.AkaResult) > 0 {
+			matches = append(matches, fuzzy_name_res_struct.AkaResult...)
+		}
+		
+		if len(fuzzy_name_res_struct.RevAkaResult) > 0 {
+			matches = append(matches, fuzzy_name_res_struct.RevAkaResult...)
+		}
+		
+		if len(fuzzy_address_res_struct.AddressResult) > 0 {
+			matches = append(matches, fuzzy_address_res_struct.AddressResult...)
+		}
+		
+		if len(fuzzy_address_res_struct.PostalCodeResult) > 0 {
+			matches = append(matches, fuzzy_address_res_struct.PostalCodeResult...)
+		}
+		
+		
+		if len(metaphone_name_res_struct.NameResult) > 0 {
+			matches = append(matches, metaphone_name_res_struct.NameResult...)
+		}
+		
+		if len(metaphone_name_res_struct.RevNameResult) > 0 {
+			matches = append(matches, metaphone_name_res_struct.RevNameResult...)
+		}
+		
+		if len(metaphone_name_res_struct.AkaResult) > 0 {
+			matches = append(matches, metaphone_name_res_struct.AkaResult...)
+		}
+		
+		if len(metaphone_name_res_struct.RevAkaResult) > 0 {
+			matches = append(matches, metaphone_name_res_struct.RevAkaResult...)
+		}
+		
+		if len(metaphone_address_res_struct.AddressResult) > 0 {
+			matches = append(matches, metaphone_address_res_struct.AddressResult...)
+		}
+		
+		if len(metaphone_address_res_struct.PostalCodeResult) > 0 {
+			matches = append(matches, metaphone_address_res_struct.PostalCodeResult...)
+		}
+		
+		
+		if len(doublemetaphone_name_res_struct.NameResult1) > 0 {
+			matches = append(matches, doublemetaphone_name_res_struct.NameResult1...)
+		}
+		
+		if len(doublemetaphone_name_res_struct.NameResult2) > 0 {
+			matches = append(matches, doublemetaphone_name_res_struct.NameResult2...)
+		}
+		
+		if len(doublemetaphone_name_res_struct.RevNameResult1) > 0 {
+			matches = append(matches, doublemetaphone_name_res_struct.RevNameResult1...)
+		}
+		
+		if len(doublemetaphone_name_res_struct.RevNameResult2) > 0 {
+			matches = append(matches, doublemetaphone_name_res_struct.RevNameResult2...)
+		}
+		
+		if len(doublemetaphone_name_res_struct.AkaResult1) > 0 {
+			matches = append(matches, doublemetaphone_name_res_struct.AkaResult1...)
+		}
+		
+		if len(doublemetaphone_name_res_struct.AkaResult2) > 0 {
+			matches = append(matches, doublemetaphone_name_res_struct.AkaResult2...)
+		}
+		
+		if len(doublemetaphone_name_res_struct.RevAkaResult1) > 0 {
+			matches = append(matches, doublemetaphone_name_res_struct.RevAkaResult1...)
+		}
+		
+		if len(doublemetaphone_name_res_struct.RevAkaResult2) > 0 {
+			matches = append(matches, doublemetaphone_name_res_struct.RevAkaResult2...)
+		}
+		
+		if len(doublemetaphone_address_res_struct.AddressResult1) > 0 {
+			matches = append(matches, doublemetaphone_address_res_struct.AddressResult1...)
+		}
+		
+		if len(doublemetaphone_address_res_struct.AddressResult2) > 0 {
+			matches = append(matches, doublemetaphone_address_res_struct.AddressResult2...)
+		}
+		
+		if len(doublemetaphone_address_res_struct.PostalCodeResult1) > 0 {
+			matches = append(matches, doublemetaphone_address_res_struct.PostalCodeResult1...)
+		}
+		
+		if len(doublemetaphone_address_res_struct.PostalCodeResult2) > 0 {
+			matches = append(matches, doublemetaphone_address_res_struct.PostalCodeResult2...)
+		}
+		
+		
 		msg := ClientServerQueryResS{
 			FuzzyName: 				fuzzy_name_res_struct,
 			FuzzyAddress: 			fuzzy_address_res_struct,
@@ -399,8 +501,16 @@ func (this *KycAmlClientServerS) handleRequest(con net.Conn) {
 			DoubleMetaphoneAddress: doublemetaphone_address_res_struct,
 			SdnEntry:				sdn_entry_res_struct,
 			RiskScore:				risk_score,
+			Matches:				matches,
 		}
 	
+		
+		// Gob response
+		encoder := gob.NewEncoder(con)
+		msg_p := &msg
+		encoder.Encode(msg_p)
+	
+		/*	// JSON response
 		msg_bytes, err := json.Marshal(msg)
 		if err != nil {
 			log.Printf("Error: %v", err)
@@ -414,6 +524,7 @@ func (this *KycAmlClientServerS) handleRequest(con net.Conn) {
 			log.Printf("Error: %v", err)
 			return
 		}
+		*/
 	}
 	
 	// Close the client's connection.

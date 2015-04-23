@@ -16,6 +16,7 @@ type ClientServerQueryResS struct {
 	DoubleMetaphoneAddress	DoubleMetaphoneQueryResS	`json:"double_metaphone_address,omitempty"`
 	SdnEntry				SdnEntryS					`json:"sdn_entry,omitempty"`
 	RiskScore				float64						`json:"risk_score,omitempty"`
+	Matches					[]string					`json:"matches,omitempty"`
 }
 
 type QueryReqS struct {

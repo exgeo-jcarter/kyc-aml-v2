@@ -1,21 +1,21 @@
 {
-	"client_host": "localhost",
+	"client_host": "0.0.0.0",
 	"client_port": "3336",
 	"client_protocol": "tcp",
 
-	"data_host": "localhost",
+	"data_host": "0.0.0.0",
 	"data_port": "3332",
 	"data_protocol": "tcp",
 	
-	"fuzzy_host": "localhost",
+	"fuzzy_host": "0.0.0.0",
 	"fuzzy_port": "3333",
 	"fuzzy_protocol": "tcp",
 	
-	"metaphone_host": "localhost",
+	"metaphone_host": "0.0.0.0",
 	"metaphone_port": "3334",
 	"metaphone_protocol": "tcp",
 	
-	"doublemetaphone_host": "localhost",
+	"doublemetaphone_host": "0.0.0.0",
 	"doublemetaphone_port": "3335",
 	"doublemetaphone_protocol": "tcp"
 }
