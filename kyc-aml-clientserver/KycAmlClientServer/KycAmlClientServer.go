@@ -397,10 +397,13 @@ func (this *KycAmlClientServerS) handleRequest(con net.Conn) {
 		}
 		
 		var sdn_entry_res_struct SdnEntryS
-		err = json.Unmarshal([]byte(sdn_entry_res), &sdn_entry_res_struct)
-		if err != nil {
-			log.Printf("Error: %v", err)
-			return
+		
+		if len(sdn_entry_res) > 0 {
+			err = json.Unmarshal([]byte(sdn_entry_res), &sdn_entry_res_struct)
+			if err != nil {
+				log.Printf("Error: %v", err)
+				return
+			}
 		}
 		
 		matches := []string{}
