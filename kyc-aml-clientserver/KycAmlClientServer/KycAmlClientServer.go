@@ -649,16 +649,11 @@ func (this *KycAmlClientServerS) QueryDoubleMetaphoneServer(action, value string
 
 func (this *KycAmlClientServerS) CalculateRiskScore(q, aq, f_name_res, f_add_res, m_name_res, m_add_res, dm_name_res, dm_add_res string) (score float64, err error) {
 	
-	num_queries := 0.0
+	num_queries := 6.0
 	num_results := 0.0
 	
-	//if q != "" {
-		num_queries += 6
-	//}
-	
-	//if aq != "" {
-	//	num_queries += 4
-	//}
+	name_weight := 1.5
+	address_weight := 0.5
 	
 	var f_name_res_json FuzzyQueryResS
 	err = json.Unmarshal([]byte(f_name_res), &f_name_res_json)
@@ -667,13 +662,13 @@ func (this *KycAmlClientServerS) CalculateRiskScore(q, aq, f_name_res, f_add_res
 		return
 	}
 	if len(f_name_res_json.NameResult) > 0 {
-		num_results++
+		num_results = num_results + 1 * name_weight
 	} else if len(f_name_res_json.RevNameResult) > 0 {
-		num_results++
+		num_results = num_results + 1 * name_weight
 	} else if len(f_name_res_json.AkaResult) > 0 {
-		num_results++
+		num_results = num_results + 1 * name_weight
 	} else if len(f_name_res_json.RevAkaResult) > 0 {
-		num_results++
+		num_results = num_results + 1 * name_weight
 	}
 	
 	var f_add_res_json FuzzyQueryResS
@@ -683,9 +678,9 @@ func (this *KycAmlClientServerS) CalculateRiskScore(q, aq, f_name_res, f_add_res
 		return
 	}
 	if len(f_add_res_json.AddressResult) > 0 {
-		num_results++
+		num_results = num_results + 1 * address_weight
 	} else if len(f_add_res_json.PostalCodeResult) > 0 {
-		num_results++
+		num_results = num_results + 1 * address_weight
 	}
 	
 	var m_name_res_json MetaphoneQueryResS
@@ -695,13 +690,13 @@ func (this *KycAmlClientServerS) CalculateRiskScore(q, aq, f_name_res, f_add_res
 		return
 	}
 	if len(m_name_res_json.NameResult) > 0 {
-		num_results++
+		num_results = num_results + 1 * name_weight
 	} else if len(m_name_res_json.RevNameResult) > 0 {
-		num_results++
+		num_results = num_results + 1 * name_weight
 	} else if len(m_name_res_json.AkaResult) > 0 {
-		num_results++
+		num_results = num_results + 1 * name_weight
 	} else if len(m_name_res_json.RevAkaResult) > 0 {
-		num_results++
+		num_results = num_results + 1 * name_weight
 	}
 	
 	var m_add_res_json MetaphoneQueryResS
@@ -711,9 +706,9 @@ func (this *KycAmlClientServerS) CalculateRiskScore(q, aq, f_name_res, f_add_res
 		return
 	}
 	if len(m_add_res_json.AddressResult) > 0 {
-		num_results++
+		num_results = num_results + 1 * address_weight
 	} else if len(m_add_res_json.PostalCodeResult) > 0 {
-		num_results++
+		num_results = num_results + 1 * address_weight
 	}
 	
 	var dm_name_res_json DoubleMetaphoneQueryResS
@@ -723,21 +718,21 @@ func (this *KycAmlClientServerS) CalculateRiskScore(q, aq, f_name_res, f_add_res
 		return
 	}
 	if len(dm_name_res_json.NameResult1) > 0 {
-		num_results++
+		num_results = num_results + 1 * name_weight
 	} else if len(dm_name_res_json.NameResult2) > 0 {
-		num_results++
+		num_results = num_results + 1 * name_weight
 	} else if len(dm_name_res_json.RevNameResult1) > 0 {
-		num_results++
+		num_results = num_results + 1 * name_weight
 	} else if len(dm_name_res_json.RevNameResult2) > 0 {
-		num_results++
+		num_results = num_results + 1 * name_weight
 	} else if len(dm_name_res_json.AkaResult1) > 0 {
-		num_results++
+		num_results = num_results + 1 * name_weight
 	} else if len(dm_name_res_json.AkaResult2) > 0 {
-		num_results++
+		num_results = num_results + 1 * name_weight
 	} else if len(dm_name_res_json.RevAkaResult1) > 0 {
-		num_results++
+		num_results = num_results + 1 * name_weight
 	} else if len(dm_name_res_json.RevAkaResult2) > 0 {
-		num_results++
+		num_results = num_results + 1 * name_weight
 	}
 	
 	var dm_add_res_json DoubleMetaphoneQueryResS
@@ -747,13 +742,13 @@ func (this *KycAmlClientServerS) CalculateRiskScore(q, aq, f_name_res, f_add_res
 		return
 	}
 	if len(dm_add_res_json.AddressResult1) > 0 {
-		num_results++
+		num_results = num_results + 1 * address_weight
 	} else if len(dm_add_res_json.AddressResult2) > 0 {
-		num_results++
+		num_results = num_results + 1 * address_weight
 	} else if len(dm_add_res_json.PostalCodeResult1) > 0 {
-		num_results++
+		num_results = num_results + 1 * address_weight
 	} else if len(dm_add_res_json.PostalCodeResult2) > 0 {
-		num_results++
+		num_results = num_results + 1 * address_weight
 	}
 	
 	score = num_results / num_queries * 100.0
