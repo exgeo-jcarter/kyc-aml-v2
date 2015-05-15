@@ -652,13 +652,13 @@ func (this *KycAmlClientServerS) CalculateRiskScore(q, aq, f_name_res, f_add_res
 	num_queries := 0.0
 	num_results := 0.0
 	
-	if q != "" {
+	//if q != "" {
 		num_queries += 6
-	}
+	//}
 	
-	if aq != "" {
-		num_queries += 4
-	}
+	//if aq != "" {
+	//	num_queries += 4
+	//}
 	
 	var f_name_res_json FuzzyQueryResS
 	err = json.Unmarshal([]byte(f_name_res), &f_name_res_json)
@@ -668,14 +668,11 @@ func (this *KycAmlClientServerS) CalculateRiskScore(q, aq, f_name_res, f_add_res
 	}
 	if len(f_name_res_json.NameResult) > 0 {
 		num_results++
-	}
-	if len(f_name_res_json.RevNameResult) > 0 {
+	} else if len(f_name_res_json.RevNameResult) > 0 {
 		num_results++
-	}
-	if len(f_name_res_json.AkaResult) > 0 {
+	} else if len(f_name_res_json.AkaResult) > 0 {
 		num_results++
-	}
-	if len(f_name_res_json.RevAkaResult) > 0 {
+	} else if len(f_name_res_json.RevAkaResult) > 0 {
 		num_results++
 	}
 	
@@ -687,8 +684,7 @@ func (this *KycAmlClientServerS) CalculateRiskScore(q, aq, f_name_res, f_add_res
 	}
 	if len(f_add_res_json.AddressResult) > 0 {
 		num_results++
-	}
-	if len(f_add_res_json.PostalCodeResult) > 0 {
+	} else if len(f_add_res_json.PostalCodeResult) > 0 {
 		num_results++
 	}
 	
@@ -700,14 +696,11 @@ func (this *KycAmlClientServerS) CalculateRiskScore(q, aq, f_name_res, f_add_res
 	}
 	if len(m_name_res_json.NameResult) > 0 {
 		num_results++
-	}
-	if len(m_name_res_json.RevNameResult) > 0 {
+	} else if len(m_name_res_json.RevNameResult) > 0 {
 		num_results++
-	}
-	if len(m_name_res_json.AkaResult) > 0 {
+	} else if len(m_name_res_json.AkaResult) > 0 {
 		num_results++
-	}
-	if len(m_name_res_json.RevAkaResult) > 0 {
+	} else if len(m_name_res_json.RevAkaResult) > 0 {
 		num_results++
 	}
 	
@@ -719,8 +712,7 @@ func (this *KycAmlClientServerS) CalculateRiskScore(q, aq, f_name_res, f_add_res
 	}
 	if len(m_add_res_json.AddressResult) > 0 {
 		num_results++
-	}
-	if len(m_add_res_json.PostalCodeResult) > 0 {
+	} else if len(m_add_res_json.PostalCodeResult) > 0 {
 		num_results++
 	}
 	
@@ -732,26 +724,19 @@ func (this *KycAmlClientServerS) CalculateRiskScore(q, aq, f_name_res, f_add_res
 	}
 	if len(dm_name_res_json.NameResult1) > 0 {
 		num_results++
-	}
-	if len(dm_name_res_json.NameResult2) > 0 {
+	} else if len(dm_name_res_json.NameResult2) > 0 {
 		num_results++
-	}
-	if len(dm_name_res_json.RevNameResult1) > 0 {
+	} else if len(dm_name_res_json.RevNameResult1) > 0 {
 		num_results++
-	}
-	if len(dm_name_res_json.RevNameResult2) > 0 {
+	} else if len(dm_name_res_json.RevNameResult2) > 0 {
 		num_results++
-	}
-	if len(dm_name_res_json.AkaResult1) > 0 {
+	} else if len(dm_name_res_json.AkaResult1) > 0 {
 		num_results++
-	}
-	if len(dm_name_res_json.AkaResult2) > 0 {
+	} else if len(dm_name_res_json.AkaResult2) > 0 {
 		num_results++
-	}
-	if len(dm_name_res_json.RevAkaResult1) > 0 {
+	} else if len(dm_name_res_json.RevAkaResult1) > 0 {
 		num_results++
-	}
-	if len(dm_name_res_json.RevAkaResult2) > 0 {
+	} else if len(dm_name_res_json.RevAkaResult2) > 0 {
 		num_results++
 	}
 	
@@ -763,14 +748,11 @@ func (this *KycAmlClientServerS) CalculateRiskScore(q, aq, f_name_res, f_add_res
 	}
 	if len(dm_add_res_json.AddressResult1) > 0 {
 		num_results++
-	}
-	if len(dm_add_res_json.AddressResult2) > 0 {
+	} else if len(dm_add_res_json.AddressResult2) > 0 {
 		num_results++
-	}
-	if len(dm_add_res_json.PostalCodeResult1) > 0 {
+	} else if len(dm_add_res_json.PostalCodeResult1) > 0 {
 		num_results++
-	}
-	if len(dm_add_res_json.PostalCodeResult2) > 0 {
+	} else if len(dm_add_res_json.PostalCodeResult2) > 0 {
 		num_results++
 	}
 	

@@ -9,7 +9,7 @@ import (
 
 func main() {
 	
-	if len(os.Args) <= 1 {
+	if len(os.Args) <= 2 {
 		log.Printf("Error: Not enough args")
 		return
 	}
@@ -25,6 +25,7 @@ func main() {
 	
 	err = enc.Encode(ClientServerQueryReqS{
 		QueryName: os.Args[1],
+		QueryAddress: os.Args[2],
 	})
 	if err != nil {
 		log.Printf("Error: Encode: %v", err)
