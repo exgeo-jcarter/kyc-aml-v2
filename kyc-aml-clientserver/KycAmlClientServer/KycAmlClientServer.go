@@ -752,6 +752,11 @@ func (this *KycAmlClientServerS) CalculateRiskScore(q, aq, f_name_res, f_add_res
 	}
 	
 	score = num_results / num_queries * 100.0
+	
+	if score == 0.0 {
+		score = 1.0
+	}
+	
 	return
 }
 
